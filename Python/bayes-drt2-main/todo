@@ -1,0 +1,30 @@
+Overview
+	Analysis
+		-Specify Experiment [Folder]
+		-Parse Data
+			CV with ECDH // Simple numpy.genfromtext
+			EIS with pyimpspec
+			Export as pandas csv
+		-Lin KK // Z-hit
+			Export as pandas csv
+		- DRT -DDT
+			First Bayes, then try others
+			Specify kernel(s). Try combinations
+			Variation of Inverters, but with unique names
+			Peak Fits
+			pickle Inverters
+			Export as pandas csv
+	Plotting
+		-Specify Experiment [Folder]
+		-Select plotting options
+		-Export as png
+			Named Uniquely
+	Simulation
+		-Full simulation
+			Specify ECM and parameters
+				Variation with noisy data
+				+Variation with noisy parameters "model noise"
+				Export as pandas csv
+		- Semi-simulated
+			Add noise to experimental data
+				Export as pandas csv

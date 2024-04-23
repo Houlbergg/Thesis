@@ -1,0 +1,13 @@
+matplotlib~=3.8.0
+numpy~=1.24.3
+pandas~=1.5.3
+pyimpspec~=4.1.0
+cycler~=0.11.0
+scienceplots~=2.1.1
+deareis~=4.2.0
+eclabfiles~=0.4.1
+yadg~=5.0.2
+scipy~=1.10.1
+cvxopt~=1.2.6
+cmdstanpy~=1.1.0
+setuptools~=68.2.2
