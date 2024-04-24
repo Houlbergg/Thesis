@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
+import glob
+import os
+import pyimpspec as pyi
 from matplotlib.figure import Figure
 # Define Custom Functions
 
@@ -18,7 +21,7 @@ def brute_eis(file):
     Returns
     ---------
     data: np.ndarray
-        Numpy array of the parsed data
+        Numpy array of the parses data
     df: pd.DataFrame
         Pandas DataFrame using bayes_drt convention of column naming
         '''
@@ -296,6 +299,7 @@ def remove_legend_duplicate():
     plt.legend(by_label.values(), by_label.keys())
 
 def create_mask_notail(dataset):
+    dataset_masked = pyi.DataSet.duplicate(dataset)
     tail_end = 0
     mask = {}
     z_im = dataset.get_impedances().imag
@@ -305,6 +309,11 @@ def create_mask_notail(dataset):
             break
     for i in range(dataset.get_num_points()):
         mask[i] = i < tail_end
-    dataset_masked = dataset.duplicate(dataset).set_mask(mask)
-
+    dataset_masked.set_mask(mask)
     return dataset_masked, mask
+
+def reset_parses():
+    files = glob.glob('Parses/*.pkl')
+    [os.remove(x) for x in files]
+
+    return

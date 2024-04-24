@@ -292,18 +292,18 @@ def read_mpt(filepath):
 #%%
 #Parse data with pyimpspec and ecdh
 
-parsedcv = []
-parsedeis= []
+parsescv = []
+parseseis= []
 
 for file in cvfiles:
     try:
         f = read_mpt(file)
-        parsedcv.append(f)
+        parsescv.append(f)
     except:
         print("Error with file " + str(file))
 for file in peisfiles:
     try:
-        parsedeis.append(pyimpspec.parse_data(file,file_format=".mpt"))
+        parseseis.append(pyimpspec.parse_data(file,file_format=".mpt"))
     except:
         print("Error with file " + str(file))
 
@@ -313,10 +313,10 @@ for file in peisfiles:
 order_cv = [5, 0, 1, 2, 3]
 order_cv_final = order_cv.pop(0)
 
-first=parsedcv[0]
+first=parsescv[0]
 toplots_cv = [first.loc[first['cycle number'] == first['cycle number'].max()]]
 for i in order_cv:
-    cv = parsedcv[i]
+    cv = parsescv[i]
     finalcycle = cv.loc[cv['cycle number'] == cv['cycle number'].max()]
     toplots_cv.append(finalcycle)
 
@@ -335,17 +335,17 @@ for i,cycle in enumerate(toplots_cv):
 order_eis = [5, 0, 1, 2, 3]
 order_eis_final = order_eis.pop(0)
 
-first=parsedeis[0][1]
+first=parseseis[0][1]
 toplots_eis = [first]
 for i in order_eis:
-    eis = parsedeis[i][1]
+    eis = parseseis[i][1]
     toplots_eis.append(eis)
 
 
 #%%
 '''
-temp = np.delete(parsedeis,4,axis=0)
-tempo = np.array(parsedeis)
+temp = np.delete(parseseis,4,axis=0)
+tempo = np.array(parseseis)
 teemo = np.array(peisfiles)
 b = np.zeros((6,2 + 1),dtype='object_')
 b[:,:-1] = tempo

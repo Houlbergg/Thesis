@@ -344,14 +344,14 @@ dummy_freq = np.logspace(6, -2, 81)
 dummy_Z = np.ones_like(dummy_freq, dtype='complex128')
 pyi_dummy = DataSet(dummy_freq, dummy_Z)
 
-parsedfiles_eis = []
+parses_eis = []
 for file in peisfiles:
     string = 'Parsed/{}'.format(file.split('.')[0].split("\\")[1])
     if not os.path.isdir(string):
         os.makedirs(string)
         try:
             parse = pyi.parse_data(file, file_format=".mpt")
-            parsedfiles_eis.append(parse)
+            parses_eis.append(parse)
             for i, cycle in enumerate(parse):
                 utils.save_pickle(cycle.to_dict(), os.path.join(
                     string, 'Cycle_{}.pkl'.format(i)))
@@ -364,18 +364,18 @@ for file in peisfiles:
                 os.path.join(string, 'Cycle_{}.pkl'.format(i)))
             parse = pyi_dummy.from_dict(pyi_pickle)
             temp_list.append(parse)
-        parsedfiles_eis.append(temp_list)
+        parses_eis.append(temp_list)
 
 # %% Parsing with ecdh
 
-parsedfiles_cv = []
+parses_cv = []
 for file in cvfiles:
     cv = read_mpt(file)
     cv = cv.loc[cv['cycle number'] == cv['cycle number'].max()]
-    parsedfiles_cv.append(cv)
+    parses_cv.append(cv)
 
 # %% Plotting CV
-plot_cycles = [parsedfiles_cv[0], parsedfiles_cv[3], parsedfiles_cv[5]]
+plot_cycles = [parses_cv[0], parses_cv[3], parses_cv[5]]
 fig, ax = plt.subplots()
 labels = ['Initial', 'Post-EIS', 'Re-balanced']
 for i, cycle in enumerate(plot_cycles):
@@ -387,10 +387,11 @@ for i, cycle in enumerate(plot_cycles):
     ax.grid(visible=True)
 fig.suptitle("5mM Dicarboxyferrocene, 1M NaCl")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"CVs.png"))
 
 # %% Plotting EIS
-plot_spectra = [parsedfiles_eis[2], parsedfiles_eis[5]]
+plot_spectra = [parses_eis[2], parses_eis[5]]
 unit_scale = ''  # If you want to swap to different scale. milli, kilo etc
 fig, ax = plt.subplots()
 for i, peis in enumerate(plot_spectra[0]):

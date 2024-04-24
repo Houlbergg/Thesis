@@ -30,7 +30,7 @@ dummy_freq = np.logspace(6, -2, 81)
 dummy_Z = np.ones_like(dummy_freq, dtype='complex128')
 pyi_dummy = DataSet(dummy_freq, dummy_Z)
 
-parsedfiles = []
+parses = []
 parse_masked = []
 for file in files:
     name = os.path.basename(file).split('.')[0]
@@ -47,10 +47,10 @@ for file in files:
         parse = []
         for cycle in pyi_pickle:
             parse.append(pyi_dummy.from_dict(cycle))
-        parsedfiles.append(parse)
+        parses.append(parse)
 
 # %%
-for peis in parsedfiles:
+for peis in parses:
     eis = peis[0]
     label = eis.get_label().split('C15')[0]
     string_mask = os.path.join('Parsed\\', label + 'notail.pkl')
@@ -67,7 +67,7 @@ for peis in parsedfiles:
 
 chosen_names = files[:-1]
 # idx = list(map(lambda x: files.index(x), chosen_names)) Generalized form perhaps
-chosen_parsed = parsedfiles[:-1]
+chosen_parsed = parses[:-1]
 chosen_parsed = [x[0] for x in chosen_parsed]
 chosen_masked = parse_masked[:-1]
 

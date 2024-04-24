@@ -411,14 +411,14 @@ dummy_freq = np.logspace(6, -2, 81)
 dummy_Z = np.ones_like(dummy_freq, dtype='complex128')
 pyi_dummy = DataSet(dummy_freq, dummy_Z)
 
-parsedfiles = []
+parses = []
 for file in files:
     string = 'Parsed/{}'.format(file.split('.')[0].split("\\")[1])
     if not os.path.isdir(string):
         os.makedirs(string)
         try:
             parse = pyi.parse_data(file, file_format=".mpt")
-            parsedfiles.append(parse)
+            parses.append(parse)
             for i, cycle in enumerate(parse):
                 utils.save_pickle(cycle.to_dict(), os.path.join(  # .to_dict() might be unneccesary)
                     string, 'Cycle_{}.pkl'.format(i)))
@@ -431,19 +431,19 @@ for file in files:
                 os.path.join(string, 'Cycle_{}.pkl'.format(i)))
             parse = pyi_dummy.from_dict(pyi_pickle)
             temp_list.append(parse)
-        parsedfiles.append(temp_list)
+        parses.append(temp_list)
 
 # %% Selecting the wanted cycles
 # For this data set from IRFB First Cell
 # We want the 1st cycle for only LowFreq_Full
-#parsedfiles[4][0]
+#parses[4][0]
 pyi_columns = ['f', 'z_re', 'z_im', 'mod', 'phz']
 chosen = []
 chosen_masked = []
 ident = ['25mHz-20ppd']
 
-chosen.append(parsedfiles[4][0])
-dummy = parsedfiles[4][0].to_dataframe(columns=pyi_columns)
+chosen.append(parses[4][0])
+dummy = parses[4][0].to_dataframe(columns=pyi_columns)
 mask = dummy['z_im'] < -0
 chosen_nonzero = dummy[dummy['z_im'] < -0]
 chosen_masked.append(pyi.dataframe_to_data_sets(chosen_nonzero, path=files[4]))
@@ -489,10 +489,10 @@ for i, exp in enumerate(chosen):
     ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
     ax.legend()
 
-    # plt.tight_layout()
     plt.gca().set_aspect('equal')
     remove_legend_duplicate()
 
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_Nyquist_data_area_inset.png"))
     plt.show()
     plt.close()
@@ -518,6 +518,7 @@ for i, exp in enumerate(chosen):
 plt.gca().set_aspect('equal')
 #remove_legend_duplicate()
 #plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, str(ident[0]) + "_Nyquist_data_area.png"))
 plt.show()
 plt.close()
@@ -542,6 +543,7 @@ for i, exp in enumerate(chosen_masked):
 plt.gca().set_aspect('equal')
 #remove_legend_duplicate()
 #plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, str(ident[0]) + "_Nyquist_data_area_nonzero.png"))
 plt.show()
 plt.close()
@@ -549,6 +551,7 @@ plt.close()
 '''
 #fig, ax = plt.subplots()
 fig, ax = pyi.mpl.plot_nyquist(chosen[0])
+plt.tight_layout()
 plt.show()
 #plt.savefig(os.path.join(fig_directory, f"Nyquist_data.png"))
 '''
@@ -566,6 +569,7 @@ for i, eis in enumerate(chosen):
     else:
         tests = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_LinKKTests.pkl'))
     fig, ax = pyi.mpl.plot_mu_xps(tests, mu_criterion=mu_criterion)
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_ExploratoryTests.png"))
     plt.show()
     plt.close()
@@ -575,6 +579,7 @@ for i, eis in enumerate(chosen):
 for i, test in enumerate(explorations):
     fig, ax = pyi.mpl.plot_residuals(test)
     plt.gca().invert_xaxis()
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_LinKKResiduals.png"))
     plt.show()
     plt.close()
@@ -601,6 +606,7 @@ for i, eis in enumerate(explorations):
     plt.gca().set_aspect('equal')
     remove_legend_duplicate()
 
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_LinKKImpedanceFit.png"))
     plt.show()
     plt.close()
@@ -825,6 +831,8 @@ for i, exp in enumerate(dFs):
     plt.gca().set_aspect('equal')
     remove_legend_duplicate()
     plt.figure(fig)
+plt.tight_layout()
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_FitImpedance.png"))
     plt.close()
 
@@ -840,6 +848,8 @@ for i, exp in enumerate(dFs):
     plt.gca().set_aspect('equal')
     remove_legend_duplicate()
     plt.figure(fig)
+plt.tight_layout()
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_FitImpedance.png"))
     plt.close()
 
@@ -855,6 +865,8 @@ for i, exp in enumerate(dFs):
     plt.gca().set_aspect('equal')
     remove_legend_duplicate()
     plt.figure(fig)
+plt.tight_layout()
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_FitImpedance.png"))
     plt.close()
 
@@ -869,6 +881,8 @@ for i, dist in enumerate(dFs):
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
+plt.tight_layout()
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT.png"))
     plt.close()
 
@@ -881,6 +895,8 @@ for i, dist in enumerate(dFs):
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
+plt.tight_layout()
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT.png"))
     plt.close()
 
@@ -893,6 +909,8 @@ for i, dist in enumerate(dFs):
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
+plt.tight_layout()
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT.png"))
     plt.close()
 
@@ -905,6 +923,8 @@ for i, dist in enumerate(dFs):
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
+plt.tight_layout()
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_nonzero.png"))
     plt.close()
 
@@ -917,6 +937,7 @@ for i, dist in enumerate(dFs):
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_nonzero.png"))
     plt.close()
 
@@ -929,6 +950,7 @@ for i, dist in enumerate(dFs):
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_nonzero.png"))
     plt.close()
 
@@ -941,12 +963,14 @@ for i, dist in enumerate(dFs):
     drt_hmc_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     drt_hmc_nonzero_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals_nonzero.png"))
     plt.close()
 
@@ -954,12 +978,14 @@ for i, dist in enumerate(dFs):
     ddt_hmc_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     ddt_hmc_nonzero_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals_nonzero.png"))
     plt.close()
 
@@ -967,12 +993,14 @@ for i, dist in enumerate(dFs):
     inv_multi_hmc_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     inv_multi_hmc_nonzero_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals_nonzero.png"))
     plt.close()
 
@@ -980,12 +1008,14 @@ for i, dist in enumerate(dFs):
     drt_map_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     drt_map_nonzero_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals_nonzero.png"))
     plt.close()
 
@@ -993,12 +1023,14 @@ for i, dist in enumerate(dFs):
     ddt_map_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     ddt_map_nonzero_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals_nonzero.png"))
     plt.close()
 
@@ -1006,12 +1038,14 @@ for i, dist in enumerate(dFs):
     inv_multi_map_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     inv_multi_map_nonzero_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
+plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals_nonzero.png"))
     plt.close()
 # plot true error structure in miliohms. Cant with this data
@@ -1030,6 +1064,7 @@ for i, dist in enumerate(dFs):
     drt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
     axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     plt.figure(fig)
+plt.tight_layout()
     fig.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits.png"))
     plt.close()
@@ -1040,6 +1075,7 @@ for i, dist in enumerate(dFs):
     ddt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
     axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     plt.figure(fig)
+plt.tight_layout()
     fig.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits.png"))
     plt.close()
@@ -1050,6 +1086,7 @@ for i, dist in enumerate(dFs):
     inv_multi_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
     axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     plt.figure(fig)
+plt.tight_layout()
     fig.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits.png"))
     plt.close()
@@ -1061,6 +1098,7 @@ for i, dist in enumerate(dFs):
         drt_map_nonzero_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
         axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
         plt.figure(fig)
+plt.tight_layout()
         fig.tight_layout()
         plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits_nonzero.png"))
         plt.close()
@@ -1073,6 +1111,7 @@ for i, dist in enumerate(dFs):
     ddt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
     axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     plt.figure(fig)
+plt.tight_layout()
     fig.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits_nonzero.png"))
     plt.close()
@@ -1083,6 +1122,7 @@ for i, dist in enumerate(dFs):
     inv_multi_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
     axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     plt.figure(fig)
+plt.tight_layout()
     fig.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits_nonzero.png"))
     plt.close()

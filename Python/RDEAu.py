@@ -313,31 +313,31 @@ def read_mpt(filepath):
     return df
 #%% Parse data with pyimpspec and ecdh
 
-parsedcv_act = []
-parsedeis_act = []
-parsedcv_post = []
-parsedeis_post = []
+parsescv_act = []
+parseseis_act = []
+parsescv_post = []
+parseseis_post = []
 
 for file in cvfiles_act:
     try:
         f = read_mpt(file)
-        parsedcv_act.append(f)
+        parsescv_act.append(f)
     except:
         print("Error with file " + str(file))
 for file in cvfiles_post:
     try:
         f = read_mpt(file)
-        parsedcv_post.append(f)
+        parsescv_post.append(f)
     except:
         print("Error with file " + str(file))
 for file in peisfiles_act:
     try:
-        parsedeis_act.append(pyimpspec.parse_data(file,file_format=".mpt"))
+        parseseis_act.append(pyimpspec.parse_data(file,file_format=".mpt"))
     except:
         print("Error with file " + str(file))
 for file in peisfiles_post:
     try:
-        parsedeis_post.append(pyimpspec.parse_data(file,file_format=".mpt"))
+        parseseis_post.append(pyimpspec.parse_data(file,file_format=".mpt"))
     except:
         print("Error with file " + str(file))
 
@@ -346,7 +346,7 @@ cyclenums = [1, 20, 40, 60, 80]
 #%% Selecting CV cycles to plot Activation
 #Using the first cycle in the first CV file + last cycle from all files
 toplots_cv_act = []
-for cv in parsedcv_act:
+for cv in parsescv_act:
     finalcycle = cv.loc[cv['cycle number'] == cv['cycle number'].max()]
     toplots_cv_act.append(finalcycle)
 
@@ -363,6 +363,7 @@ for i,cycle in enumerate(toplots_cv_act):
     ax.legend()
     ax.grid()
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig("Figures\ActivationCV.png")
 
 #%% CV Plotting individual cycles Activation
@@ -377,7 +378,7 @@ for i,cycle in enumerate(toplots_cv_act):
 #%% Selecting EIS spectra to plot Activation
 
 toplots_eis_act = []
-for eis in parsedeis_act:
+for eis in parseseis_act:
     toplots_eis_act.append(eis[0])
 
 #%% EIS Plotting Activation
@@ -421,7 +422,7 @@ for i,peis in enumerate(toplots_eis_act):
 #%% Selecting CV cycles to plot Post
 
 toplots_cv_post = []
-for cv in parsedcv_post:
+for cv in parsescv_post:
     finalcycle = cv.loc[cv['cycle number'] == cv['cycle number'].max()]
     toplots_cv_post.append(finalcycle)
 
@@ -445,7 +446,7 @@ for i,cycle in enumerate(toplots_cv_post):
 #%% Selecting EIS spectra to plot Post
 
 toplots_eis_post = []
-for eis in parsedeis_post:
+for eis in parseseis_post:
     toplots_eis_post.append(eis[0])
 
 #%% EIS Plotting Post

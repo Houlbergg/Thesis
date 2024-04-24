@@ -32,14 +32,14 @@ dummy_freq = np.logspace(6, -2, 81)
 dummy_Z = np.ones_like(dummy_freq, dtype='complex128')
 pyi_dummy = DataSet(dummy_freq, dummy_Z)
 
-parsedfiles = []
+parses = []
 for file in files:
     name = os.path.basename(file).split('.')[0]
     string = os.path.join('Parsed\\', name) + '.pkl'
     if not os.path.isfile(string):
         try:
             parse = pyi.parse_data(file, file_format=".mpt")
-            parsedfiles.append(parse)
+            parses.append(parse)
             cycles = []
             for cycle in parse:
                 cycles.append(cycle.to_dict())
@@ -51,13 +51,13 @@ for file in files:
         parse = []
         for cycle in pyi_pickle:
             parse.append(pyi_dummy.from_dict(cycle))
-        parsedfiles.append(parse)
+        parses.append(parse)
 # %% Selecting the wanted cycles
 # Comparing Dampened and Un-dampened at various flow rate
 # + Weird tail
 #
 chosen_names = files[7:9]
-chosen_parsed = [parsedfiles[7][0], parsedfiles[8][0]]
+chosen_parsed = [parses[7][0], parses[8][0]]
 first = chosen_parsed[0].get_impedances().real
 second = chosen_parsed[1].get_impedances().real
 chosen_diff = second[119] - first[119]
@@ -83,6 +83,7 @@ for i, exp in enumerate(chosen_parsed):
     plt.gca().set_aspect('equal')
 #remove_legend_duplicate()
 #plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, 'Dampening' + "_Nyquist_data_area.png"))
 plt.show()
 plt.close()
@@ -109,6 +110,7 @@ for i, exp in enumerate(chosen_parsed):
     plt.gca().set_aspect('equal')
 #remove_legend_duplicate()
 #plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, 'Dampening_zoom' + "_Nyquist_data_area.png"))
 plt.show()
 plt.close()
@@ -165,10 +167,10 @@ plt.close()
 
 # %% Raw Nyquist weird tail
 chosen_names = files[7:11]
-# chosen_parsed = [parsedfiles[7][0], parsedfiles[8][0], parsedfiles[9][0], parsedfiles[10][0]]
-chosen_dummy = parsedfiles[7:11]
+# chosen_parsed = [parses[7][0], parses[8][0], parses[9][0], parses[10][0]]
+chosen_dummy = parses[7:11]
 chosen_dummy2 = chosen_dummy[:]
-chosen_parsed = [sublist[0] for sublist in parsedfiles[7:11]]
+chosen_parsed = [sublist[0] for sublist in parses[7:11]]
 
 tailident = ['20mL/min', '20mL/min Dampened', '30mL/min Dampened', '40mL/min Dampened']
 ident = ['Base', 'Dampened']

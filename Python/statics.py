@@ -21,6 +21,6 @@ def set_experiment(experiment):
     pkl_directory = os.path.join(pkl_dir, experiment)
     fig_directory = os.path.join(fig_dir, experiment)
     os.chdir(directory)
-    if not os.path.isdir('Parsed'):
-        os.makedirs('Parsed')
+    if not os.path.isdir('Parses'):
+        os.makedirs('Parses')
     return directory, fig_directory, pkl_directory

@@ -117,14 +117,14 @@ dummy_freq = np.logspace(6, -2, 81)
 dummy_Z = np.ones_like(dummy_freq,dtype='complex128')
 pyi_dummy = DataSet(dummy_freq, dummy_Z)
 
-parsedfiles = []
+parses = []
 for file in files:
     string = 'Parsed/{}'.format(file.split('.')[0].split("\\")[1])
     if not os.path.isdir(string):
         os.makedirs(string)
         try:
             parse = pyi.parse_data(file, file_format=".mpt")
-            parsedfiles.append(parse)
+            parses.append(parse)
             for i,cycle in enumerate(parse):
                 utils.save_pickle(cycle.to_dict(), os.path.join(string, 'Cycle_{}.pkl'.format(i)))
         except:
@@ -133,7 +133,7 @@ for file in files:
         for i, cycle in enumerate(os.listdir(string)):
             pyi_pickle = utils.load_pickle(os.path.join(string, 'Cycle_{}.pkl'.format(i)))
             parse = pyi_dummy.from_dict(pyi_pickle)
-            parsedfiles.append(parse)
+            parses.append(parse)
 
 # For this data set from Baichen we want the 1st cycle for all but 2cms, where we want the last
 # [0,0] [1,0] [2,3] [3,0]
@@ -142,7 +142,7 @@ for file in files:
 
 # %% Selecting the wanted cycles
 
-chosen = [parsedfiles[4][0]]
+chosen = [parses[4][0]]
 # Construct Pandas df because bayes_drt package likes that
 columns = ['Freq', 'Zreal', 'Zimag', 'Zmod', 'Zphs']
 dFs = []
@@ -222,6 +222,8 @@ inv_map.plot_fit(axes=axes, plot_type='nyquist', color='r', label='MAP fit', plo
 
 fig.suptitle("Reconstructed Impedance")
 plt.figure(fig)
+plt.tight_layout()
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"FitImpedance.png"))
 
 plt.show()
@@ -246,6 +248,8 @@ axes.legend()
 
 fig.suptitle("DRT")
 plt.figure(fig)
+plt.tight_layout()
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"DRT.png"))
 
 plt.show()
@@ -268,6 +272,8 @@ axes[1].legend()
 
 fig.suptitle("Bayes Estimated Error Structure")
 plt.figure(fig)
+plt.tight_layout()
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"BayesResiduals.png"))
 
 plt.show()
@@ -290,6 +296,7 @@ axes[1].legend()
 
 fig.suptitle("MAP Estimated Error Structure")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"MAPResiduals.png"))
 
 plt.show()
@@ -307,6 +314,7 @@ fig.tight_layout()
 
 fig.suptitle("Bayes Peak Fits")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"BayesPeakFits.png"))
 
 plt.show()
@@ -323,6 +331,7 @@ fig.tight_layout()
 
 fig.suptitle("MAP Peak Fits")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"MAPPeakFits.png"))
 
 plt.show()
@@ -368,6 +377,7 @@ inv_multi_map.plot_fit(axes=axes, plot_type='nyquist', color='r', label='MAP fit
 
 fig.suptitle("Reconstructed Impedance - Multi Distribution")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"FitImpedanceMulti.png"))
 
 plt.show()
@@ -392,6 +402,7 @@ axes.legend()
 
 fig.suptitle("Combined DRT-DDT")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"DRT-DDT.png"))
 
 plt.show()
@@ -414,6 +425,7 @@ axes[1].legend()
 
 fig.suptitle("Bayes Estimated Error Structure - Multi Distribution")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"BayesResidualsMulti.png"))
 
 plt.show()
@@ -436,6 +448,7 @@ axes[1].legend()
 
 fig.suptitle("MAP Estimated Error Structure - Multi Distribution")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"MAPResidualsMulti.png"))
 
 plt.show()
@@ -453,6 +466,7 @@ fig.tight_layout()
 
 fig.suptitle("Bayes Peak Fits - Multi Distribution")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"BayesPeakFitsMulti.png"))
 
 plt.show()
@@ -469,6 +483,7 @@ fig.tight_layout()
 
 fig.suptitle("MAP Peak Fits - Multi Distribution")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"MAPPeakFitsMulti.png"))
 
 plt.show()

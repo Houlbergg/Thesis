@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Default Thesis Scope" pattern="file[Python]:.idea/*||file[Python]:.ipynb_checkpoints/*||file[Python]:Data/*||file[Python]:Experiments/*||file[Python]:Figures/*||file[Python]:ImpedanceDataOld/*||file[Python]:Pickles/*||file:Analysis.py||file:codeAnalysis.py||file:DearEISBaichen.json||file:Dicarboxylferrocene.py||file:Drifter.py||file:funcs.py||file:GoldElectrode.py||file:GoldRDEDrift.py||file:LocalTest.py||file:mpl_settings.py||file:my_plot.py||file:Notebook.ipynb||file:RDEAu.py||file:RDEyaml.yml||file:requirements.txt||file:secondtry.py||file:statics.py||file:Untitled.ipynb" />
+</component>

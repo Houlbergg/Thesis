@@ -8,16 +8,20 @@ Created on Mon Apr  8 12:48:04 2024
 import numpy as np
 import pandas as pd
 import os
+
 # import sys
 # import time
 import glob
 import gc
 import matplotlib.pyplot as plt
-# import matplotlib.axes._secondary_axes
+
+# import matplotlib.axes.x
 from matplotlib import ticker
+
 # import matplotlib.gridspec as gridspec
 from matplotlib.figure import Figure
 from cycler import cycler
+
 # from bayes_drt2.inversion import Inverter
 # import bayes_drt2.file_load as fl
 # import bayes_drt2.plotting as bp
@@ -25,6 +29,7 @@ from bayes_drt2 import utils
 
 import pyimpspec as pyi
 from pyimpspec import DataSet
+
 # from pyimpspec.plot.mpl.utility import _configure_log_scale, _configure_log_limits
 
 # from pyimpspec import mpl
@@ -34,6 +39,7 @@ from pyimpspec import DataSet
 
 pd.options.mode.chained_assignment = None  # default='warn'
 load_with_captions = True
+
 
 # %% Aspect Ratio function
 # Blatantly stolen from bayes_drt
@@ -132,6 +138,7 @@ def set_aspect_ratio(ax, dataset):
 
     return ax
 
+
 # %% Equal tickspace function
 # %% CV parser from ecdh
 
@@ -151,14 +158,14 @@ def read_mpt(filepath):
 
     # with open(filepath, 'r', encoding= "iso-8859-1") as f:  #open the filepath for the mpt file
     #    lines = f.readlines()
-    with open(filepath, errors='ignore') as f:
+    with open(filepath, errors="ignore") as f:
         lines = f.readlines()
 
     # now we skip all the data in the start and jump straight to the dense data
     headerlines = 0
     for line in lines:
         if "Nb header lines :" in line:
-            headerlines = int(line.split(':')[-1])
+            headerlines = int(line.split(":")[-1])
             break  # breaks for loop when headerlines is found
 
     for i, line in enumerate(lines):
@@ -168,8 +175,7 @@ def read_mpt(filepath):
                 break
 
         if "Characteristic mass :" in line:
-            active_mass = float(line.split(
-                ':')[-1][:-3].replace(',', '.'))/1000
+            active_mass = float(line.split(":")[-1][:-3].replace(",", ".")) / 1000
             # print("Active mass found in file to be: " + str(active_mass) + "g")
             break  # breaks loop when active mass is found
 
@@ -187,59 +193,64 @@ def read_mpt(filepath):
     del lines
     gc.collect()
 
-    big_df = pd.read_csv(filepath, header=headerlines -
-                         whitelines-1, sep="\t", encoding="ISO-8859-1")
+    big_df = pd.read_csv(
+        filepath, header=headerlines - whitelines - 1, sep="\t", encoding="ISO-8859-1"
+    )
     # print("Dataframe column names: {}".format(big_df.columns))
 
     # Start filling dataframe
-    if 'I/mA' in big_df.columns:
-        current_header = 'I/mA'
-    elif '<I>/mA' in big_df.columns:
-        current_header = '<I>/mA'
-    df = big_df[['mode', 'time/s', 'Ewe/V',
-                 current_header, 'cycle number', 'ox/red']]
+    if "I/mA" in big_df.columns:
+        current_header = "I/mA"
+    elif "<I>/mA" in big_df.columns:
+        current_header = "<I>/mA"
+    df = big_df[["mode", "time/s", "Ewe/V", current_header, "cycle number", "ox/red"]]
     # Change headers of df to be correct
-    df.rename(columns={current_header: '<I>/mA'}, inplace=True)
+    df.rename(columns={current_header: "<I>/mA"}, inplace=True)
 
     # If it's galvanostatic we want the capacity
-    mode = df['mode'].value_counts()  # Find occurences of modes
+    mode = df["mode"].value_counts()  # Find occurences of modes
     # Remove the count of modes with rest (if there are large rests, there might be more rest datapoints than GC/CV steps)
     mode = mode[mode.index != 3]
-    mode = mode.idxmax()    # Picking out the mode with the maximum occurences
+    mode = mode.idxmax()  # Picking out the mode with the maximum occurences
     # print("Found cycling mode: {}".format(modes[mode]))
 
     if mode == 1:
-        df = df.join(big_df['Capacity/mA.h'])
-        df.rename(columns={'Capacity/mA.h': 'capacity/mAhg'}, inplace=True)
+        df = df.join(big_df["Capacity/mA.h"])
+        df.rename(columns={"Capacity/mA.h": "capacity/mAhg"}, inplace=True)
         # the str.replace only works and is only needed if it is a string
-        if df.dtypes['capacity/mAhg'] == str:
-            df['capacity/mAhg'] = pd.to_numeric(
-                df['capacity/mAhg'].str.replace(',', '.'))
+        if df.dtypes["capacity/mAhg"] == str:
+            df["capacity/mAhg"] = pd.to_numeric(
+                df["capacity/mAhg"].str.replace(",", ".")
+            )
     del big_df  # deletes the dataframe
     gc.collect()  # Clean unused memory (which is the dataframe above)
     # Replace , by . and make numeric from strings. Mode is already interpreted as int.
     for col in df.columns:
-        if df.dtypes[col] == str:  # the str.replace only works and is only needed if it is a string
-            df[col] = pd.to_numeric(df[col].str.replace(',', '.'))
+        if (
+            df.dtypes[col] == str
+        ):  # the str.replace only works and is only needed if it is a string
+            df[col] = pd.to_numeric(df[col].str.replace(",", "."))
     # df['time/s'] = pd.to_numeric(df['time/s'].str.replace(',','.'))
     # df['Ewe/V'] = pd.to_numeric(df['Ewe/V'].str.replace(',','.'))
     # df['<I>/mA'] = pd.to_numeric(df['<I>/mA'].str.replace(',','.'))
     # df['cycle number'] = pd.to_numeric(df['cycle number'].str.replace(',','.')).astype('int32')
-    df.rename(columns={'ox/red': 'charge'}, inplace=True)
-    df['charge'].replace({1: True, 0: False}, inplace=True)
+    df.rename(columns={"ox/red": "charge"}, inplace=True)
+    df["charge"].replace({1: True, 0: False}, inplace=True)
 
-#    if mode == 2:
+    #    if mode == 2:
     # If it is CV data, then BioLogic counts the cycles in a weird way (starting new cycle when passing the point of the OCV, not when starting a charge or discharge..) so we need to count our own cycles
 
-#        df['cycle number'] = df['charge'].ne(df['charge'].shift()).cumsum()
-#        df['cycle number'] = df['cycle number'].floordiv(2)
+    #        df['cycle number'] = df['charge'].ne(df['charge'].shift()).cumsum()
+    #        df['cycle number'] = df['cycle number'].floordiv(2)
 
     # Adding attributes must be the last thing to do since it will not be copied when doing operations on the dataframe
     df.experiment_mode = mode
 
     return df
 
-#%% Homemade tickspace function
+
+# %% Homemade tickspace function
+
 
 def set_equal_tickspace(ax, figure=None):
     assert isinstance(figure, Figure) or figure is None, figure
@@ -260,7 +271,9 @@ def set_equal_tickspace(ax, figure=None):
 
     return ax
 
-#%% Removes legend duplicates
+
+# %% Removes legend duplicates
+
 
 def remove_legend_duplicate():
     try:
@@ -269,26 +282,28 @@ def remove_legend_duplicate():
         print("No plot available")
     by_label = dict(zip(labels, handles))
     plt.legend(by_label.values(), by_label.keys())
+
+
 # %% Establish Static Directories
 # os.chdir(__file__)
 home = r"C:\Users\Houlberg\Documents\Thesis\Python"
 os.chdir(home)
 
 # Load stan files for unpickeling ??????
-sms = glob.glob('../bayes-drt2-main/bayes_drt2/stan_model_files/*.pkl')
+sms = glob.glob("../bayes-drt2-main/bayes_drt2/stan_model_files/*.pkl")
 # sms = glob.glob('Pickles/*.pkl')
 for file in sms:
     utils.load_pickle(file)
 
-exp_dir = os.path.join(home, r'Experiments')
-fig_dir = os.path.join(home, r'Figures')
-pkl_dir = os.path.join(home, r'Pickles')
+exp_dir = os.path.join(home, r"Experiments")
+fig_dir = os.path.join(home, r"Figures")
+pkl_dir = os.path.join(home, r"Pickles")
 # pkl = os.path.join(pkl_dir,'obj{}.pkl'.format('MAP'))
 
-tester = home + r'\Experiments'
+tester = home + r"\Experiments"
 # %% Selecting Experiment and establishing subfolders
 
-experiment = r'RDE\Dicarboxylferrocene'
+experiment = r"RDE\Dicarboxylferrocene"
 if not os.path.isdir(os.path.join(exp_dir, experiment)):
     os.makedirs(os.path.join(exp_dir, experiment))
 
@@ -303,8 +318,8 @@ pkl_directory = os.path.join(pkl_dir, experiment)
 fig_directory = os.path.join(fig_dir, experiment)
 os.chdir(directory)
 
-if not os.path.isdir('Parsed'):
-    os.makedirs('Parsed')
+if not os.path.isdir("Parsed"):
+    os.makedirs("Parsed")
 
 # %% Matplotlib parameters
 # base = 'seaborn-v0_8' # -paper or -poster for smaller or larger figs ##Doesnt really work
@@ -312,31 +327,36 @@ if not os.path.isdir('Parsed'):
 # ticks = 'seaborn-v0_8-ticks'
 # plt.style.use([base,size,ticks])
 
-colors = ['#4C72B0', '#55A868', '#C44E52', '#8172B2', '#CCB974', '#64B5CD']
-plt.rcParams['axes.prop_cycle'] = cycler(color=colors)
-plt.rcParams['patch.facecolor'] = colors[0]
+colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974", "#64B5CD"]
+plt.rcParams["axes.prop_cycle"] = cycler(color=colors)
+plt.rcParams["patch.facecolor"] = colors[0]
 
 tick_size = 9
 label_size = 11
 # fig_width = 10
-plt.rcParams['figure.figsize'] = [8, 5.5]
-plt.rcParams['figure.dpi'] = 200
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['font.sans-serif'] = ['Arial', 'Liberation Sans',
-                                   'DejaVu Sans', 'Bitstream Vera Sans', 'sans-serif']
-plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+plt.rcParams["figure.figsize"] = [8, 5.5]
+plt.rcParams["figure.dpi"] = 200
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = [
+    "Arial",
+    "Liberation Sans",
+    "DejaVu Sans",
+    "Bitstream Vera Sans",
+    "sans-serif",
+]
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
 
-plt.rcParams['lines.markersize'] = 5
-plt.rcParams['xtick.labelsize'] = tick_size
-plt.rcParams['ytick.labelsize'] = tick_size
-plt.rcParams['axes.labelsize'] = label_size
-plt.rcParams['legend.fontsize'] = tick_size + 1
-plt.rcParams['legend.frameon'] = True
-plt.rcParams['legend.framealpha'] = 0.95
+plt.rcParams["lines.markersize"] = 5
+plt.rcParams["xtick.labelsize"] = tick_size
+plt.rcParams["ytick.labelsize"] = tick_size
+plt.rcParams["axes.labelsize"] = label_size
+plt.rcParams["legend.fontsize"] = tick_size + 1
+plt.rcParams["legend.frameon"] = True
+plt.rcParams["legend.framealpha"] = 0.95
 
 # %% Load Files and seperate by type.
 # REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
-files = glob.glob('Data/*.mpt')
+files = glob.glob("Data/*.mpt")
 
 peisfiles = []
 cvfiles = []
@@ -350,77 +370,83 @@ for file in files:
 
 # %% Parsing with pyimpspec
 dummy_freq = np.logspace(6, -2, 81)
-dummy_Z = np.ones_like(dummy_freq, dtype='complex128')
+dummy_Z = np.ones_like(dummy_freq, dtype="complex128")
 pyi_dummy = DataSet(dummy_freq, dummy_Z)
 
-parsedfiles_eis = []
+parses_eis = []
 for file in peisfiles:
-    string = 'Parsed/{}'.format(file.split('.')[0].split("\\")[1])
+    string = "Parsed/{}".format(file.split(".")[0].split("\\")[1])
     if not os.path.isdir(string):
         os.makedirs(string)
         try:
             parse = pyi.parse_data(file, file_format=".mpt")
-            parsedfiles_eis.append(parse)
+            parses_eis.append(parse)
             for i, cycle in enumerate(parse):
-                utils.save_pickle(cycle.to_dict(), os.path.join(  # .to_dict() might be unneccesary)
-                    string, 'Cycle_{}.pkl'.format(i)))
+                utils.save_pickle(
+                    cycle.to_dict(),
+                    os.path.join(  # .to_dict() might be unneccesary)
+                        string, "Cycle_{}.pkl".format(i)
+                    ),
+                )
         except:
             print("Pyimpspec could not parse file" + str(file))
     else:
         temp_list = []
         for i, cycle in enumerate(os.listdir(string)):
             pyi_pickle = utils.load_pickle(
-                os.path.join(string, 'Cycle_{}.pkl'.format(i)))
+                os.path.join(string, "Cycle_{}.pkl".format(i))
+            )
             parse = pyi_dummy.from_dict(pyi_pickle)
             temp_list.append(parse)
-        parsedfiles_eis.append(temp_list)
+        parses_eis.append(temp_list)
 
 # %% Parsing with ecdh
 
-parsedfiles_cv = []
+parses_cv = []
 for file in cvfiles:
     cv = read_mpt(file)
-    cv = cv.loc[cv['cycle number'] == cv['cycle number'].max()]
-    parsedfiles_cv.append(cv)
+    cv = cv.loc[cv["cycle number"] == cv["cycle number"].max()]
+    parses_cv.append(cv)
 
 # %% Plotting CV
-plot_cycles = [parsedfiles_cv[0], parsedfiles_cv[3], parsedfiles_cv[5]]
+plot_cycles = [parses_cv[0], parses_cv[3], parses_cv[5]]
 fig, ax = plt.subplots()
-labels = ['Initial', 'Post-EIS', 'Re-balanced']
+labels = ["Initial", "Post-EIS", "Re-balanced"]
 for i, cycle in enumerate(plot_cycles):
-    ax.plot(cycle['Ewe/V'], cycle['<I>/mA'], label=labels[i])
-    ax.set_xlabel(r'$E / V$')
-    ax.set_ylabel(r'$I / A$')
+    ax.plot(cycle["Ewe/V"], cycle["<I>/mA"], label=labels[i])
+    ax.set_xlabel(r"$E / V$")
+    ax.set_ylabel(r"$I / A$")
 
     ax.legend()
     ax.grid(visible=True)
 fig.suptitle("5mM Dicarboxyferrocene, 1M NaCl")
 plt.figure(fig)
+plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, f"CVs.png"))
 
 # %% Plotting EIS
-plot_spectra = [parsedfiles_eis[2], parsedfiles_eis[5]]
-unit_scale = ''  # If you want to swap to different scale. milli, kilo etc
+plot_spectra = [parses_eis[2], parses_eis[5]]
+unit_scale = ""  # If you want to swap to different scale. milli, kilo etc
 fig, ax = plt.subplots()
 for i, peis in enumerate(plot_spectra[0]):
     imp = peis.get_impedances()
-    ax.scatter(imp.real, -imp.imag, label='Cycle #' + str(i))
+    ax.scatter(imp.real, -imp.imag, label="Cycle #" + str(i))
 
     ax = set_aspect_ratio(ax, peis)
     ax = set_equal_tickspace(ax, figure=fig)
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$")
+    ax.set_ylabel(f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$")
     ax.legend()
 
 # plt.tight_layout()
-plt.gca().set_aspect('equal')
+plt.gca().set_aspect("equal")
 
 plt.savefig(os.path.join(fig_directory, f"InitialEIS.png"))
 plt.show()
 
 # %% Plotting EIS Multi
-unit_scale = ''  # If you want to swap to different scale. milli, kilo etc
+unit_scale = ""  # If you want to swap to different scale. milli, kilo etc
 labels = labels[::2]
 fig, ax = plt.subplots()
 for i, meas in enumerate(plot_spectra):
@@ -431,84 +457,83 @@ for i, meas in enumerate(plot_spectra):
     ax = set_aspect_ratio(ax, peis)
     ax = set_equal_tickspace(ax, figure=fig)
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$")
+    ax.set_ylabel(f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$")
     ax.legend()
 
 # plt.tight_layout()
-plt.gca().set_aspect('equal')
+plt.gca().set_aspect("equal")
 handles, labels = plt.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
 plt.legend(by_label.values(), by_label.keys())
-
 
 plt.savefig(os.path.join(fig_directory, f"EISComparison.png"))
 plt.show()
 
 # %% Lin - KK ala pyimpspec
-if not os.path.isfile(os.path.join(pkl_directory,'LinKKTests.pkl')):
+if not os.path.isfile(os.path.join(pkl_directory, "LinKKTests.pkl")):
     subject = plot_spectra[0][-1]
     mu_criterion = 0.85
     tests = pyi.perform_exploratory_tests(subject, mu_criterion=mu_criterion)
-    utils.save_pickle(tests, os.path.join(pkl_directory,'LinKKTests.pkl'))
+    utils.save_pickle(tests, os.path.join(pkl_directory, "LinKKTests.pkl"))
 else:
-    tests = utils.load_pickle(os.path.join(pkl_directory,'LinKKTests.pkl'))
+    tests = utils.load_pickle(os.path.join(pkl_directory, "LinKKTests.pkl"))
 fig, ax = pyi.mpl.plot_mu_xps(tests, mu_criterion=mu_criterion)
 plt.savefig(os.path.join(fig_directory, f"ExploratoryTests.png"))
 plt.show()
 
 # %% Residual plot
-#I personally prefer freq going high to low from left to right ("similar" as nyquist)
+# I personally prefer freq going high to low from left to right ("similar" as nyquist)
 fig, ax = pyi.mpl.plot_residuals(tests[0])
 plt.gca().invert_xaxis()
 plt.savefig(os.path.join(fig_directory, f"LinKKResiduals.png"))
 plt.show()
 
 # %%
-'''
+"""
 figure, axes = pyi.mpl.plot_nyquist(tests[0], line=True)
 _ = pyi.mpl.plot_nyquist(subject, figure=figure, axes=axes, colors={
                          "impedance": "black"}, label='Data')
 figure.tight_layout()
-'''
+"""
 
 # %% Plotting Lin KK fitted EIS
-unit_scale = ''  # If you want to swap to different scale. milli, kilo etc
-labels = ['Data', '#(RC)=30']
-plot_type = ['scatter','plot']
+unit_scale = ""  # If you want to swap to different scale. milli, kilo etc
+labels = ["Data", "#(RC)=30"]
+plot_type = ["scatter", "plot"]
 
 fig, ax = plt.subplots()
 for i, peis in enumerate([subject, tests[0]]):
     imp = peis.get_impedances()
-    if plot_type[i] == 'scatter':
+    if plot_type[i] == "scatter":
         ax.scatter(imp.real, -imp.imag, color=colors[i], label=labels[i])
-    elif plot_type[i] == 'plot':
+    elif plot_type[i] == "plot":
         ax.plot(imp.real, -imp.imag, color=colors[i], label=labels[i])
 
     ax = set_aspect_ratio(ax, peis)
     ax = set_equal_tickspace(ax, figure=fig)
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$")
+    ax.set_ylabel(f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$")
     ax.legend()
 
     line = True
 # plt.tight_layout()
-plt.gca().set_aspect('equal')
+plt.gca().set_aspect("equal")
 remove_legend_duplicate()
 
 plt.savefig(os.path.join(fig_directory, f"LinKKImpedanceFit.png"))
 plt.show()
 
 # %% Z-hit
-if not os.path.isfile(os.path.join(pkl_directory,'Z-hit.pkl')):
-    zHit = pyi.perform_zhit(subject,interpolation='auto')
-    utils.save_pickle(zHit, os.path.join(pkl_directory,'Z-hit.pkl'))
+if not os.path.isfile(os.path.join(pkl_directory, "Z-hit.pkl")):
+    zHit = pyi.perform_zhit(subject, interpolation="auto")
+    utils.save_pickle(zHit, os.path.join(pkl_directory, "Z-hit.pkl"))
 else:
-    zHit = utils.load_pickle(os.path.join(pkl_directory,'Z-hit.pkl'))
+    zHit = utils.load_pickle(os.path.join(pkl_directory, "Z-hit.pkl"))
 
-#%%
+# %%
 fig, ax = plt.subplots()
-_, ax = pyi.mpl.plot_bode(subject, fig=fig, axes = [ax,ax])
-pyi.mpl.plot_bode(zHit,fig=fig)
+_, ax = pyi.mpl.plot_bode(subject, fig=fig, axes=[ax, ax])
+pyi.mpl.plot_bode(zHit, fig=fig)
 plt.show()

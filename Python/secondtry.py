@@ -210,17 +210,17 @@ def axscale(ax,dataset):
 #%%
 #Parse data with pyimpspec
 
-parsedfiles= []
+parses= []
 
 for file in peisfiles:
     try:
-        parsedfiles.append(pyimpspec.parse_data(file,file_format=".mpt"))
+        parses.append(pyimpspec.parse_data(file,file_format=".mpt"))
     except:
         print("Error with file " + str(file))
 
 #No clue why some files dont work
 
-# parsedfiles has a wonky structure due to difference in ec-lab experiment setup
+# parses has a wonky structure due to difference in ec-lab experiment setup
 # its an array of arrays with a number of rows corrosponding t0 the number of PEIS files
 # the number of columns is not consistent but is fixed later
 # Based on if the series were generated from a n_cycle > 1 or a new technique in EC-lab
@@ -236,7 +236,7 @@ tomerge = []
 uniqueindex = []
 k = 0
 
-for peis in parsedfiles:
+for peis in parses:
     
     label = str(peis[0])
     kword1 = "HCl1M"

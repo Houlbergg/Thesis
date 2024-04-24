@@ -87,17 +87,17 @@ for file in os.listdir(direc):
         continue
 
 #%% Parsing with pyimpspec
-parsedfiles = []
+parses = []
 for i,file in enumerate(loadedfiles):
     try:
         temp = pyi.parse_data(file[0],file_format=".mpt")
-        parsedfiles.append([temp,file[1]])
+        parses.append([temp,file[1]])
     except:
         print("Error with file " + str(file))
 #For this data set from Baichen we want the 1st cycle for all but 2cms, where we want the last
 #[0,0,0] [1,0,0] [2,0,3] [3,0,0]
 #%% Selecting the wanted cycles
-chosen = [parsedfiles[0][0][0],parsedfiles[1][0][0],parsedfiles[2][0][3],parsedfiles[3][0][0]]
+chosen = [parses[0][0][0],parses[1][0][0],parses[2][0][3],parses[3][0][0]]
 # Construct Pandas df because the package likes that
 columns=['Freq','Zreal','Zimag','Zmod','Zphs']
 dFs = []
