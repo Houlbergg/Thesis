@@ -26,63 +26,39 @@ plt.rcParams['ytick.labelsize'] = 14
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+home = r"C:\Users\Houlberg\Documents\Thesis\Python\Experiments"
+os.chdir(home)
 # %% Set folders
-directory, fig_directory, pkl_directory = statics.set_experiment(
-    "IRFB\\240415-Felt-0p5M_FeCl2FeCl23-1M_HCl"
-)
-files = glob.glob("Data/*.mpt")
+felt = "IRFB\\Hackjob\\Felt\\240416-EIS-0p5M_FeCl2FeCl3-1M_HCl-20mLmin_Dampened-25mHz_10ppd_C15.mpt"
 
+cloth1 = "IRFB\\Hackjob\\Cloth1\\240422-EIS-Cloth1-0p5M_FeCl2FeCl3-1M_HCl-20mLmin-25mHz_10ppd-Warmup_C15.mpt"
+
+cloth2 = "IRFB\\Hackjob\\Cloth2\\240418-EIS-Cloth2-0p5M_FeCl2FeCl3-1M_HCl-20mLmin-25mHz_10ppd-Warmup_C15.mpt"
 # %% Parsing with pyimpspec. REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
-parses = []
-for file in files:
-    name = os.path.basename(file).split(".")[0]
-    string = os.path.join("Parsed\\", name) + ".pkl"
-    if not os.path.isfile(string):
-        try:
-            parse = pyi.parse_data(file, file_format=".mpt")
-            utils.save_pickle(parse, string)
-            parses.append(parse)
-        except:
-            print("Pyimpspec could not parse file" + str(file))
-    else:
-        pyi_pickle = utils.load_pickle(string)
-        #pyi_pickle = pyi.DataSet.from_dict(pyi_pickle)
-        parses.append(pyi_pickle)
+parse = pyi.parse_data(felt, file_format=".mpt")[-1]
+parse1 = pyi.parse_data(cloth1, file_format=".mpt")[-1]
+parse2 = pyi.parse_data(cloth2, file_format=".mpt")[-1]
+parse_masked, mask = funcs.create_mask_notail(parse)
+parse1_masked, mask1 = funcs.create_mask_notail(parse1)
+parse2_masked, mask2 = funcs.create_mask_notail(parse2)
 
 # %%
-parse_masked = []
-for peis in parses:
-    eis = peis[0]
-    label = eis.get_label().split("C15")[0]
-    string_mask = os.path.join("Parsed\\", label + "notail.pkl")
-    if not os.path.isfile(string_mask):
-        eis_masked, mask = funcs.create_mask_notail(eis)
-        parse_masked.append(eis_masked)
-        #utils.save_pickle(parse_masked, string_mask)
-    else:
-        pyi_pickle_masked = utils.load_pickle(string_mask)
-        parse_masked.append(pyi_pickle_masked)
-# %% Selecting the wanted cycles
-# Comparing Flow rates with nothing else changed. First [0] cycle each file. Exclude 10mHz at first [-1]
-
-chosen_names = files[:-1]
-# idx = list(map(lambda x: files.index(x), chosen_names)) Generalized form perhaps
-chosen_parses = parses[:-1]
-chosen_parses = [x[0] for x in chosen_parses]
-chosen_masked = parse_masked[:-1]
-
-ident = ["5mL/min", "10mL/min", "20mL/min", "50mL/min", "100mL/min"]
-
+fig_directory = "figs"
+if not os.path.exists(fig_directory):
+    os.mkdir(fig_directory)
+ident = ["Felt", "Cloth1", "Cloth2"]
+parses = [parse, parse1, parse2]
+parses_masked = [parse_masked, parse1_masked, parse2_masked]
 # %% Nyquist
 
 unit_scale = ""
 area = 2.3**2
 fig, ax = plt.subplots()
-for i, exp in enumerate(chosen_parses):
+for i, exp in enumerate(parses_masked):
     imp = exp.get_impedances() * area
     ax.plot(imp.real, -imp.imag, label=ident[i])
     # ax = set_aspect_ratio(ax, chosen[0])
-    funcs.set_equal_tickspace(ax, figure=fig)
+    funcs.set_equal_tickspace(ax, figure=fig, space='max')
 
     ax.grid(visible=True)
     ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
@@ -111,7 +87,7 @@ for i, exp in enumerate(chosen_masked):
     # ax = set_aspect_ratio(ax, chosen[0])
     # ax.set_xlim((0.4, 1))
     # ax.set_ylim((0, 0.25))
-    funcs.set_equal_tickspace(ax, figure=fig, space='max')
+    funcs.set_equal_tickspace(ax, figure=fig, space='ma')
 
     ax.set_aspect("equal")
     ax.grid(visible=True)

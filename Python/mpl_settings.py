@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from cycler import cycler
+import scienceplots
 
 # Matplotlib parameters
 '''
@@ -52,4 +53,7 @@ plt.rcParams['legend.fontsize'] = tick_size + 1
 plt.rcParams['legend.frameon'] = True
 plt.rcParams['legend.framealpha'] = 0.95
 
-# plt.style.use(['science','notebook']) Might be nice for TeX
+plt.style.use('notebook')  # Overrides a lot
+
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12

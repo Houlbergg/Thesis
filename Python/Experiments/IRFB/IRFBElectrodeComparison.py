@@ -32,6 +32,18 @@ directory, fig_directory, pkl_directory = statics.set_experiment(
 )
 files = glob.glob("Data/*.mpt")
 
+directory1, fig_directory1, pkl_directory1 = statics.set_experiment(
+    "IRFB\\240415-Felt-0p5M_FeCl2FeCl23-1M_HCl"
+)
+files = glob.glob("Data/*.mpt")
+
+directory2, fig_directory2, pkl_directory2 = statics.set_experiment(
+    "IRFB\\240415-Felt-0p5M_FeCl2FeCl23-1M_HCl"
+)
+files = glob.glob("Data/*.mpt")
+
+# Reconsider this one
+
 # %% Parsing with pyimpspec. REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
 parses = []
 for file in files:

@@ -255,12 +255,15 @@ def read_mpt(filepath):
 
     return df
 
-def set_equal_tickspace(ax, figure=None):
+def set_equal_tickspace(ax, figure=None, space=('min', 0.5)):
     '''
     Adjusts x and y tick-spacing to be equal to the lower of the two
 
     Parameters
     ----------
+    space : str or tuple
+        If str, should be either 'max' or 'min'.
+        If tuple, should be a tuple of a string ('max' or 'min') and a value between 0 and 1.
     ax : matplotlib.axes._axes.Axes
         Axes to adjust tickspace on
     figure : matplotlib.figure.Figure, optional
@@ -275,14 +278,29 @@ def set_equal_tickspace(ax, figure=None):
     if figure is None:
         assert ax is None
         figure, axis = plt.subplots()
-        ax = [axis]
+        ax = axis
 
     xticks = ax.get_xticks()
     yticks = ax.get_yticks()
     xtickspace = xticks[1] - xticks[0]
     ytickspace = yticks[1] - yticks[0]
 
-    spacing = min(xtickspace, ytickspace)
+    if isinstance(space, str):
+        if space == 'max':
+            spacing = max(xtickspace, ytickspace)
+        elif space == 'min':
+            spacing = min(xtickspace, ytickspace)
+        else:
+            raise ValueError('space must be either "max" or "min"')
+    elif isinstance(space, tuple) and len(space) == 2 and isinstance(space[0], str) and isinstance(space[1], (int, float)):
+        if space[0] == 'min':
+            spacing = min(space[1] * xtickspace, space[1] * ytickspace)
+        elif space[0] =='max':
+            spacing = max(space[1] * xtickspace, space[1] * ytickspace)
+        else:
+            raise ValueError('Invalid tuple format. The first element should be either "max" or "min".')
+    else:
+        raise ValueError('Invalid space parameter format.')
 
     ax.xaxis.set_major_locator(ticker.MultipleLocator(base=spacing))
     ax.yaxis.set_major_locator(ticker.MultipleLocator(base=spacing))
