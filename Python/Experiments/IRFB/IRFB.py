@@ -445,8 +445,8 @@ ident = ['25mHz-20ppd']
 chosen.append(parses[4][0])
 dummy = parses[4][0].to_dataframe(columns=pyi_columns)
 mask = dummy['z_im'] < -0
-chosen_nonzero = dummy[dummy['z_im'] < -0]
-chosen_masked.append(pyi.dataframe_to_data_sets(chosen_nonzero, path=files[4]))
+chosen_masked = dummy[dummy['z_im'] < -0]
+chosen_masked.append(pyi.dataframe_to_data_sets(chosen_masked, path=files[4]))
 chosen_masked = list(zip(*chosen_masked))[0]
 # Construct Pandas df because bayes_drt package likes that
 columns = ['Freq', 'Zreal', 'Zimag', 'Zmod', 'Zphs']
@@ -544,7 +544,7 @@ plt.gca().set_aspect('equal')
 #remove_legend_duplicate()
 #plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
 plt.tight_layout()
-plt.savefig(os.path.join(fig_directory, str(ident[0]) + "_Nyquist_data_area_nonzero.png"))
+plt.savefig(os.path.join(fig_directory, str(ident[0]) + "_Nyquist_data_area_masked.png"))
 plt.show()
 plt.close()
 # %%
@@ -618,27 +618,27 @@ for i, eis in enumerate(explorations):
 # (not necessary in general, but yields faster results here - see Tutorial 1 for more info on basis_freq)
 drt_hmc_list = []
 drt_map_list = []
-drt_hmc_nonzero_list = []
-drt_map_nonzero_list = []
+drt_hmc_masked_list = []
+drt_map_masked_list = []
 ddt_hmc_list = []
 ddt_map_list = []
-ddt_hmc_nonzero_list = []
-ddt_map_nonzero_list = []
+ddt_hmc_masked_list = []
+ddt_map_masked_list = []
 inv_multi_hmc_list = []
 inv_multi_map_list = []
-inv_multi_hmc_nonzero_list = []
-inv_multi_map_nonzero_list = []
+inv_multi_hmc_masked_list = []
+inv_multi_map_masked_list = []
 
 for i, eis in enumerate(dFs):
 
     freq, Z = fl.get_fZ(eis)
-    freq_nz, Z_nz = fl.get_fZ(dFs_masked[i])
+    freq_mask, Z_mask = fl.get_fZ(dFs_masked[i])
 
     # DRT
     drt_hmc = Inverter(basis_freq=freq)
     drt_map = Inverter(basis_freq=freq)
-    drt_hmc_nonzero = Inverter(basis_freq=freq_nz)
-    drt_map_nonzero = Inverter(basis_freq=freq_nz)
+    drt_hmc_masked = Inverter(basis_freq=freq_mask)
+    drt_map_masked = Inverter(basis_freq=freq_mask)
     # DDT
     ddt_hmc = Inverter(distributions={'TP-DDT':  # user-defined distribution name
                                           {'kernel': 'DDT',  # indicates that a DDT-type kernel should be used
@@ -653,8 +653,8 @@ for i, eis in enumerate(dFs):
                        basis_freq=np.logspace(6, -3, 91)  # use basis range large enough to capture full DDT
                        )
     ddt_map = copy.deepcopy(ddt_hmc)
-    ddt_hmc_nonzero = copy.deepcopy(ddt_hmc)
-    ddt_map_nonzero = copy.deepcopy(ddt_hmc)
+    ddt_hmc_masked = copy.deepcopy(ddt_hmc)
+    ddt_map_masked = copy.deepcopy(ddt_hmc)
     # Multi distribution
     # for sp_dr: use xp_scale=0.8
     inv_multi_hmc = Inverter(distributions={"DRT": {'kernel': 'DRT'},
@@ -669,8 +669,8 @@ for i, eis in enumerate(dFs):
                                             }
                              )
     inv_multi_map = copy.deepcopy(inv_multi_hmc)
-    inv_multi_hmc_nonzero = copy.deepcopy(inv_multi_hmc)
-    inv_multi_map_nonzero = copy.deepcopy(inv_multi_hmc)
+    inv_multi_hmc_masked = copy.deepcopy(inv_multi_hmc)
+    inv_multi_map_masked = copy.deepcopy(inv_multi_hmc)
 
     # Perform HMC fit
     file_pickle = os.path.join(pkl_directory, '{0}_{1}.pkl'.format(ident[i],drt_hmc))
@@ -691,14 +691,14 @@ for i, eis in enumerate(dFs):
 
 
     # Perform HMC fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_nz.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_mask.pkl')):
         start = time.time()
-        drt_hmc_nonzero.fit(freq_nz, Z_nz, mode='sample')
+        drt_hmc_masked.fit(freq_mask, Z_mask, mode='sample')
         elapsed = time.time() - start
         print('HMC fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(drt_hmc_nonzero, os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_nz.pkl'))
+        utils.save_pickle(drt_hmc_masked, os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_mask.pkl'))
     else:
-        drt_hmc_nonzero = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_nz.pkl'))
+        drt_hmc_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_mask.pkl'))
 
     #  Perform MAP fit
     if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_drt_map.pkl')):
@@ -711,14 +711,14 @@ for i, eis in enumerate(dFs):
         drt_map = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_drt_map.pkl'))
 
     #  Perform MAP fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_drt_map_nz.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_drt_map_mask.pkl')):
         start = time.time()
-        drt_map_nonzero.fit(freq_nz, Z_nz, mode='sample')
+        drt_map_masked.fit(freq_mask, Z_mask, mode='sample')
         elapsed = time.time() - start
         print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(drt_map_nonzero, os.path.join(pkl_directory, str(ident[i]) + '_drt_map_nz.pkl'))
+        utils.save_pickle(drt_map_masked, os.path.join(pkl_directory, str(ident[i]) + '_drt_map_mask.pkl'))
     else:
-        drt_map_nonzero = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_drt_map_nz.pkl'))
+        drt_map_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_drt_map_mask.pkl'))
 
     # Perform DDT HMC fit
     if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc.pkl')):
@@ -731,14 +731,14 @@ for i, eis in enumerate(dFs):
         ddt_hmc = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc.pkl'))
 
     # Perform DDT HMC fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_nz.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_mask.pkl')):
         start = time.time()
-        ddt_hmc_nonzero.fit(freq_nz, Z_nz, mode='sample')
+        ddt_hmc_masked.fit(freq_mask, Z_mask, mode='sample')
         elapsed = time.time() - start
         print('HMC fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(ddt_hmc_nonzero, os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_nz.pkl'))
+        utils.save_pickle(ddt_hmc_masked, os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_mask.pkl'))
     else:
-        ddt_hmc_nonzero = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_nz.pkl'))
+        ddt_hmc_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_mask.pkl'))
 
     #  Perform DDT MAP fit
     if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map.pkl')):
@@ -751,14 +751,14 @@ for i, eis in enumerate(dFs):
         ddt_map = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map.pkl'))
 
     #  Perform DDT MAP fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_nz.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_mask.pkl')):
         start = time.time()
-        ddt_map_nonzero.fit(freq_nz, Z_nz, mode='sample')
+        ddt_map_masked.fit(freq_mask, Z_mask, mode='sample')
         elapsed = time.time() - start
         print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(ddt_map_nonzero, os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_nz.pkl'))
+        utils.save_pickle(ddt_map_masked, os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_mask.pkl'))
     else:
-        ddt_map_nonzero = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_nz.pkl'))
+        ddt_map_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_mask.pkl'))
 
     # Perform DRT+DDT HMC fit
     if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc.pkl')):
@@ -781,37 +781,37 @@ for i, eis in enumerate(dFs):
         inv_multi_map = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map.pkl'))
 
     # Perform DRT+DDT HMC fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_nz.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_mask.pkl')):
         start = time.time()
-        inv_multi_hmc_nonzero.fit(freq_nz, Z_nz, mode='sample', nonneg=True)
+        inv_multi_hmc_masked.fit(freq_mask, Z_mask, mode='sample', nonneg=True)
         elapsed = time.time() - start
         print('HMC fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(inv_multi_hmc, os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_nz.pkl'))
+        utils.save_pickle(inv_multi_hmc, os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_mask.pkl'))
     else:
-        inv_multi_hmc = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_nz.pkl'))
+        inv_multi_hmc = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_mask.pkl'))
 
     #  Perform DRT+DDT MAP fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_nz.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_mask.pkl')):
         start = time.time()
-        inv_multi_map_nonzero.fit(freq_nz, Z_nz, mode='optimize', nonneg=True)  # initialize from ridge solution
+        inv_multi_map_masked.fit(freq_mask, Z_mask, mode='optimize', nonneg=True)  # initialize from ridge solution
         elapsed = time.time() - start
         print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(inv_multi_map_nonzero, os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_nz.pkl'))
+        utils.save_pickle(inv_multi_map_masked, os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_mask.pkl'))
     else:
-        inv_multi_map_nonzero = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_nz.pkl'))
+        inv_multi_map_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_mask.pkl'))
 
     drt_hmc_list.append(drt_hmc)
     drt_map_list.append(drt_map)
-    drt_hmc_nonzero_list.append(drt_hmc_nonzero)
-    drt_map_nonzero_list.append(drt_map_nonzero)
+    drt_hmc_masked_list.append(drt_hmc_masked)
+    drt_map_masked_list.append(drt_map_masked)
     ddt_hmc_list.append(ddt_hmc)
     ddt_map_list.append(ddt_map)
-    ddt_hmc_nonzero_list.append(ddt_hmc)
-    ddt_map_nonzero_list.append(ddt_map)
+    ddt_hmc_masked_list.append(ddt_hmc)
+    ddt_map_masked_list.append(ddt_map)
     inv_multi_hmc_list.append(inv_multi_hmc)
     inv_multi_map_list.append(inv_multi_map)
-    inv_multi_hmc_nonzero_list.append(inv_multi_hmc)
-    inv_multi_map_nonzero_list.append(inv_multi_map)
+    inv_multi_hmc_masked_list.append(inv_multi_hmc)
+    inv_multi_map_masked_list.append(inv_multi_map)
 
 # %% Visualize DRT and impedance fit
 # plot impedance fit and recovered DRT
@@ -914,44 +914,44 @@ plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT.png"))
     plt.close()
 
-    #tau_drt_nz = drt_map_nonzero_list[i].distributions['DRT']['tau']
-    tau_drt_nz = None
+    #tau_drt_mask = drt_map_masked_list[i].distributions['DRT']['tau']
+    tau_drt_mask = None
     fig, axes = plt.subplots()
-    drt_hmc_nonzero_list[i].plot_distribution(ax=axes, tau_plot=tau_drt_nz, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    drt_map_nonzero_list[i].plot_distribution(ax=axes, tau_plot=tau_drt_nz, color='r', label='MAP')
+    drt_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_drt_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
+    drt_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_drt_mask, color='r', label='MAP')
     sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
 plt.tight_layout()
     plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_masked.png"))
     plt.close()
 
-    #tau_ddt_nz = ddt_map_nonzero_list[i].distributions['TP-DDT']['tau']
-    tau_ddt_nz = None
+    #tau_ddt_mask = ddt_map_masked_list[i].distributions['TP-DDT']['tau']
+    tau_ddt_mask = None
     fig, axes = plt.subplots()
-    ddt_hmc_nonzero_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt_nz, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    ddt_map_nonzero_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt_nz, color='r', label='MAP')
+    ddt_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
+    ddt_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt_mask, color='r', label='MAP')
     sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
 plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_masked.png"))
     plt.close()
 
-    #tau_multi_nz = inv_multi_map_nonzero_list[i].distributions['DRT']['tau']
-    tau_multi_nz = None
+    #tau_multi_mask = inv_multi_map_masked_list[i].distributions['DRT']['tau']
+    tau_multi_mask = None
     fig, axes = plt.subplots()
-    inv_multi_hmc_nonzero_list[i].plot_distribution(ax=axes, tau_plot=tau_multi_nz, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    inv_multi_map_nonzero_list[i].plot_distribution(ax=axes, tau_plot=tau_multi_nz, color='r', label='MAP')
+    inv_multi_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_multi_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
+    inv_multi_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_multi_mask, color='r', label='MAP')
     sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
     sec_xaxis.set_xlabel('$f$ / Hz')
     axes.legend()
     plt.figure(fig)
 plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_masked.png"))
     plt.close()
 
     plt.show()
@@ -968,10 +968,10 @@ plt.tight_layout()
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    drt_hmc_nonzero_list[i].plot_residuals(axes=axes)
+    drt_hmc_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
 plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals_masked.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
@@ -983,10 +983,10 @@ plt.tight_layout()
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    ddt_hmc_nonzero_list[i].plot_residuals(axes=axes)
+    ddt_hmc_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
 plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals_masked.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
@@ -998,10 +998,10 @@ plt.tight_layout()
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    inv_multi_hmc_nonzero_list[i].plot_residuals(axes=axes)
+    inv_multi_hmc_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
 plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals_masked.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
@@ -1013,10 +1013,10 @@ plt.tight_layout()
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    drt_map_nonzero_list[i].plot_residuals(axes=axes)
+    drt_map_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
 plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals_masked.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
@@ -1028,10 +1028,10 @@ plt.tight_layout()
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    ddt_map_nonzero_list[i].plot_residuals(axes=axes)
+    ddt_map_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
 plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals_masked.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
@@ -1043,10 +1043,10 @@ plt.tight_layout()
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    inv_multi_map_nonzero_list[i].plot_residuals(axes=axes)
+    inv_multi_map_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
 plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals_masked.png"))
     plt.close()
 # plot true error structure in miliohms. Cant with this data
 # p = axes[0].plot(freq, 3*Zdf['sigma_re'] * 1000, ls='--')
@@ -1093,14 +1093,14 @@ plt.tight_layout()
 
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     try:
-        drt_map_nonzero_list[i].fit_peaks(prom_rthresh=0.05)
-        drt_map_nonzero_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-        drt_map_nonzero_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
+        drt_map_masked_list[i].fit_peaks(prom_rthresh=0.05)
+        drt_map_masked_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
+        drt_map_masked_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
         axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
         plt.figure(fig)
 plt.tight_layout()
         fig.tight_layout()
-        plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits_nonzero.png"))
+        plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits_masked.png"))
         plt.close()
     except:
         print("Error with file " + str(chosen[i]) + "For DRT Non-zero Peak Fitting")
@@ -1113,7 +1113,7 @@ plt.tight_layout()
     plt.figure(fig)
 plt.tight_layout()
     fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits_masked.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
@@ -1124,7 +1124,7 @@ plt.tight_layout()
     plt.figure(fig)
 plt.tight_layout()
     fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits_nonzero.png"))
+    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits_masked.png"))
     plt.close()
 
 #%% Re sort files

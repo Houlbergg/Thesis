@@ -48,7 +48,7 @@ files = glob.glob("Data/*.mpt")
 parses = []
 for file in files:
     name = os.path.basename(file).split(".")[0]
-    string = os.path.join("Parsed\\", name) + ".pkl"
+    string = os.path.join(pkl_directory, name) + ".pkl"
     if not os.path.isfile(string):
         try:
             parse = pyi.parse_data(file, file_format=".mpt")
@@ -66,7 +66,7 @@ parse_masked = []
 for peis in parses:
     eis = peis[0]
     label = eis.get_label().split("C15")[0]
-    string_mask = os.path.join("Parsed\\", label + "notail.pkl")
+    string_mask = os.path.join(pkl_directory, label + "notail.pkl")
     if not os.path.isfile(string_mask):
         eis_masked, mask = funcs.create_mask_notail(eis)
         parse_masked.append(eis_masked)

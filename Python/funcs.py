@@ -8,10 +8,43 @@ import glob
 import os
 import pyimpspec as pyi
 from matplotlib.figure import Figure
-# Define Custom Functions
+import pickle
+import io
+
+
+# Define Custom Functions (And Class :) )
+class FilteredStream(io.StringIO):
+    def __init__(self, filtered_values=None):
+        super().__init__()
+        self.filtered_values = filtered_values if filtered_values else []
+
+    def write(self, msg):
+        if not any(filtered_value in msg for filtered_value in self.filtered_values):
+            super().write(msg)
+
+
+def save_pickle(obj, file):
+    with open(file, "xb") as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+    print("Dumped pickle to {}".format(file))
+
+
+def load_pickle(file):
+    with open(file, "rb") as f:
+        return pickle.load(f)
+
+
+def rename_files(folder_path, common_part):
+    for filename in os.listdir(folder_path):
+        if common_part in filename:
+            new_filename = filename.replace(common_part, "")
+            old_path = os.path.join(folder_path, filename)
+            new_path = os.path.join(folder_path, new_filename)
+            os.rename(old_path, new_path)
+
 
 def brute_eis(file):
-    '''
+    """
     Manual approach to parsing .mpt eis files
 
     Parameter
@@ -24,19 +57,26 @@ def brute_eis(file):
         Numpy array of the parses data
     df: pd.DataFrame
         Pandas DataFrame using bayes_drt convention of column naming
-        '''
-    f = open(file, 'r')
-    line_two = f.readlines()[1] #Line two will say: "Nb of header lines: XX"
+    """
+    f = open(file, "r")
+    line_two = f.readlines()[1]  # Line two will say: "Nb of header lines: XX"
     f.close()
-    header_lines = int(np.array(line_two.split())[np.char.isnumeric(np.array(line_two.split()))].astype(int)) #Grabbing the numeric value of header lines
+    header_lines = int(
+        np.array(line_two.split())[
+            np.char.isnumeric(np.array(line_two.split()))
+        ].astype(int)
+    )  # Grabbing the numeric value of header lines
     data = np.genfromtxt(file, delimiter="\t", skip_header=int(header_lines))
 
     # Construct Pandas df because the bayes_drt package likes that
-    df = pd.DataFrame(data=data[:, 0:5], columns=['Freq', 'Zreal', 'Zimag', 'Zmod', 'Zphs'])
+    df = pd.DataFrame(
+        data=data[:, 0:5], columns=["Freq", "Zreal", "Zimag", "Zmod", "Zphs"]
+    )
     return data, df
 
+
 def set_aspect_ratio(ax, dataset):
-    '''
+    """
     Force the ratio between xmin, xmax, to be equal to ymin, ymax (and vice versa)
     Blatantly stolen from bayes_drt
     Adjusted for pyimpspec Datasets as compared to pandas DataFrames
@@ -45,14 +85,14 @@ def set_aspect_ratio(ax, dataset):
     Parameters
     ----------
     ax : matplotlib.axes._axes.Axes
-    	Axes on which to plot
+        Axes on which to plot
     dataset : pyimpspec.data.data_set.Dataset
         Pyimpspec DataSet containing the data to be plotted
 
     Returns
     -------
     None
-    '''
+    """
     pyimp = dataset.get_impedances()
     img = pyimp.imag
     real = pyimp.real
@@ -145,7 +185,6 @@ def set_aspect_ratio(ax, dataset):
     return
 
 
-
 def read_mpt(filepath):
     """
     CV parser from ecdh
@@ -167,14 +206,14 @@ def read_mpt(filepath):
 
     # with open(filepath, 'r', encoding= "iso-8859-1") as f:  #open the filepath for the mpt file
     #    lines = f.readlines()
-    with open(filepath, errors='ignore') as f:
+    with open(filepath, errors="ignore") as f:
         lines = f.readlines()
 
     # now we skip all the data in the start and jump straight to the dense data
     headerlines = 0
     for line in lines:
         if "Nb header lines :" in line:
-            headerlines = int(line.split(':')[-1])
+            headerlines = int(line.split(":")[-1])
             break  # breaks for loop when headerlines is found
 
     for i, line in enumerate(lines):
@@ -184,8 +223,7 @@ def read_mpt(filepath):
                 break
 
         if "Characteristic mass :" in line:
-            active_mass = float(line.split(
-                ':')[-1][:-3].replace(',', '.')) / 1000
+            active_mass = float(line.split(":")[-1][:-3].replace(",", ".")) / 1000
             # print("Active mass found in file to be: " + str(active_mass) + "g")
             break  # breaks loop when active mass is found
 
@@ -203,46 +241,49 @@ def read_mpt(filepath):
     del lines
     gc.collect()
 
-    big_df = pd.read_csv(filepath, header=headerlines -
-                                          whitelines - 1, sep="\t", encoding="ISO-8859-1")
+    big_df = pd.read_csv(
+        filepath, header=headerlines - whitelines - 1, sep="\t", encoding="ISO-8859-1"
+    )
     # print("Dataframe column names: {}".format(big_df.columns))
 
     # Start filling dataframe
-    if 'I/mA' in big_df.columns:
-        current_header = 'I/mA'
-    elif '<I>/mA' in big_df.columns:
-        current_header = '<I>/mA'
-    df = big_df[['mode', 'time/s', 'Ewe/V',
-                 current_header, 'cycle number', 'ox/red']]
+    if "I/mA" in big_df.columns:
+        current_header = "I/mA"
+    elif "<I>/mA" in big_df.columns:
+        current_header = "<I>/mA"
+    df = big_df[["mode", "time/s", "Ewe/V", current_header, "cycle number", "ox/red"]]
     # Change headers of df to be correct
-    df.rename(columns={current_header: '<I>/mA'}, inplace=True)
+    df.rename(columns={current_header: "<I>/mA"}, inplace=True)
 
     # If it's galvanostatic we want the capacity
-    mode = df['mode'].value_counts()  # Find occurences of modes
+    mode = df["mode"].value_counts()  # Find occurences of modes
     # Remove the count of modes with rest (if there are large rests, there might be more rest datapoints than GC/CV steps)
     mode = mode[mode.index != 3]
     mode = mode.idxmax()  # Picking out the mode with the maximum occurences
     # print("Found cycling mode: {}".format(modes[mode]))
 
     if mode == 1:
-        df = df.drt_hmc_pickle(big_df['Capacity/mA.h'])
-        df.rename(columns={'Capacity/mA.h': 'capacity/mAhg'}, inplace=True)
+        df = df.drt_hmc_pickle(big_df["Capacity/mA.h"])
+        df.rename(columns={"Capacity/mA.h": "capacity/mAhg"}, inplace=True)
         # the str.replace only works and is only needed if it is a string
-        if df.dtypes['capacity/mAhg'] == str:
-            df['capacity/mAhg'] = pd.to_numeric(
-                df['capacity/mAhg'].str.replace(',', '.'))
+        if df.dtypes["capacity/mAhg"] == str:
+            df["capacity/mAhg"] = pd.to_numeric(
+                df["capacity/mAhg"].str.replace(",", ".")
+            )
     del big_df  # deletes the dataframe
     gc.collect()  # Clean unused memory (which is the dataframe above)
     # Replace , by . and make numeric from strings. Mode is already interpreted as int.
     for col in df.columns:
-        if df.dtypes[col] == str:  # the str.replace only works and is only needed if it is a string
-            df[col] = pd.to_numeric(df[col].str.replace(',', '.'))
+        if (
+            df.dtypes[col] == str
+        ):  # the str.replace only works and is only needed if it is a string
+            df[col] = pd.to_numeric(df[col].str.replace(",", "."))
     # df['time/s'] = pd.to_numeric(df['time/s'].str.replace(',','.'))
     # df['Ewe/V'] = pd.to_numeric(df['Ewe/V'].str.replace(',','.'))
     # df['<I>/mA'] = pd.to_numeric(df['<I>/mA'].str.replace(',','.'))
     # df['cycle number'] = pd.to_numeric(df['cycle number'].str.replace(',','.')).astype('int32')
-    df.rename(columns={'ox/red': 'charge'}, inplace=True)
-    df['charge'].replace({1: True, 0: False}, inplace=True)
+    df.rename(columns={"ox/red": "charge"}, inplace=True)
+    df["charge"].replace({1: True, 0: False}, inplace=True)
 
     #    if mode == 2:
     # If it is CV data, then BioLogic counts the cycles in a weird way (starting new cycle when passing the point of the OCV, not when starting a charge or discharge..) so we need to count our own cycles
@@ -255,8 +296,9 @@ def read_mpt(filepath):
 
     return df
 
-def set_equal_tickspace(ax, figure=None, space=('min', 0.5)):
-    '''
+
+def set_equal_tickspace(ax, figure=None, space=("min", 1)):
+    """
     Adjusts x and y tick-spacing to be equal to the lower of the two
 
     Parameters
@@ -273,7 +315,7 @@ def set_equal_tickspace(ax, figure=None, space=('min', 0.5)):
     -------
     None.
 
-    '''
+    """
     assert isinstance(figure, Figure) or figure is None, figure
     if figure is None:
         assert ax is None
@@ -286,35 +328,44 @@ def set_equal_tickspace(ax, figure=None, space=('min', 0.5)):
     ytickspace = yticks[1] - yticks[0]
 
     if isinstance(space, str):
-        if space == 'max':
+        if space == "max":
             spacing = max(xtickspace, ytickspace)
-        elif space == 'min':
+        elif space == "min":
             spacing = min(xtickspace, ytickspace)
         else:
             raise ValueError('space must be either "max" or "min"')
-    elif isinstance(space, tuple) and len(space) == 2 and isinstance(space[0], str) and isinstance(space[1], (int, float)):
-        if space[0] == 'min':
-            spacing = min(space[1] * xtickspace, space[1] * ytickspace)
-        elif space[0] =='max':
-            spacing = max(space[1] * xtickspace, space[1] * ytickspace)
+    elif (
+        isinstance(space, tuple)
+        and len(space) == 2
+        and isinstance(space[0], str)
+        and isinstance(space[1], (int, float))
+    ):
+        if space[0] == "min":
+            spacing = min(xtickspace, ytickspace) * space[1]
+        elif space[0] == "max":
+            spacing = max(xtickspace, ytickspace) * space[1]
         else:
-            raise ValueError('Invalid tuple format. The first element should be either "max" or "min".')
+            raise ValueError(
+                'Invalid tuple format. The first element should be either "max" or "min".'
+            )
     else:
-        raise ValueError('Invalid space parameter format.')
+        raise ValueError("Invalid space parameter format.")
 
     ax.xaxis.set_major_locator(ticker.MultipleLocator(base=spacing))
     ax.yaxis.set_major_locator(ticker.MultipleLocator(base=spacing))
 
     return
 
+
 def remove_legend_duplicate():
-    #Removes legend duplicates
+    # Removes legend duplicates
     try:
         handles, labels = plt.gca().get_legend_handles_labels()
     except ValueError:
         print("No plot available")
     by_label = dict(zip(labels, handles))
     plt.legend(by_label.values(), by_label.keys())
+
 
 def create_mask_notail(dataset):
     dataset_masked = pyi.DataSet.duplicate(dataset)
@@ -330,8 +381,38 @@ def create_mask_notail(dataset):
     dataset_masked.set_mask(mask)
     return dataset_masked, mask
 
-def reset_parses():
-    files = glob.glob('Parses/*.pkl')
+
+def reset_pickles(path):
+    """
+    Remove all pickles in the given directory.
+
+    Args:
+        path (str): The path to the directory.
+    """
+    # Remove all pickles in the given directory
+    # os.remove(path + '/*.pkl')
+    # os.remove(path + '/*.h
+    files = glob.glob(path + "**.pkl")
     [os.remove(x) for x in files]
 
     return
+
+
+def swap_filename_parts(filename):
+    """
+    Swap the order of parts of a filename separated by underscores, while maintaining the file extension.
+
+    Args:
+        filename (str): The input filename.
+
+    Returns:
+        str: The modified filename with parts swapped.
+
+    Example:
+        swapped_filename = swap_filename_parts('part1_part2_part3.txt')
+        print(swapped_filename)  # Output: 'part3_part2_part1.txt'
+    """
+    name, extension = filename.split(".")
+    parts = name.split("_", maxsplit=1)
+    swapped_filename = "_".join(parts[::-1]) + "." + extension
+    return swapped_filename

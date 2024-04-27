@@ -36,7 +36,7 @@ files = glob.glob("Data/*.mpt")
 parses = []
 for file in files:
     name = os.path.basename(file).split(".")[0]
-    string = os.path.join("Parsed\\", name) + ".pkl"
+    string = os.path.join(pkl_directory, name) + ".pkl"
     if not os.path.isfile(string):
         try:
             parse = pyi.parse_data(file, file_format=".mpt")
@@ -54,24 +54,24 @@ parse_masked = []
 for peis in parses:
     eis = peis[0]
     label = eis.get_label().split("C15")[0]
-    string_mask = os.path.join("Parsed\\", label + "notail.pkl")
+    string_mask = os.path.join(pkl_directory, label + "notail.pkl")
     if not os.path.isfile(string_mask):
         eis_masked, mask = funcs.create_mask_notail(eis)
         parse_masked.append(eis_masked)
-        #utils.save_pickle(parse_masked, string_mask)
+        utils.save_pickle(parse_masked, string_mask)
     else:
         pyi_pickle_masked = utils.load_pickle(string_mask)
         parse_masked.append(pyi_pickle_masked)
 # %% Selecting the wanted cycles
-# Comparing Flow rates with nothing else changed. First [0] cycle each file. Exclude 10mHz at first [-1]
+# Baichen was nice to us here, there is only per file
 
-chosen_names = files[:-1]
+chosen_names = files
 # idx = list(map(lambda x: files.index(x), chosen_names)) Generalized form perhaps
-chosen_parses = parses[:-1]
+chosen_parses = parses
 chosen_parses = [x[0] for x in chosen_parses]
-chosen_masked = parse_masked[:-1]
+chosen_masked = parse_masked
 
-ident = ["5mL/min", "10mL/min", "20mL/min", "50mL/min", "100mL/min"]
+ident = [""]
 
 # %% Nyquist
 
