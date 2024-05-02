@@ -2,26 +2,23 @@
 @author: Houlberg
 """
 import contextlib
+import warnings
 
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 # Init
 
 import glob
 import os
-import time
 import copy
-from typing import List
 
 import matplotlib.pyplot as plt
-import scienceplots
 import mpl_settings
 
 import numpy as np
 import pandas as pd
 import pyimpspec as pyi
-from pyimpspec import DataSet
 
 import bayes_drt2.file_load as fl
-import bayes_drt2.utils as utils
 import matplotlib.axes._secondary_axes
 from bayes_drt2.inversion import Inverter
 
@@ -138,7 +135,7 @@ for direc in dist_list_str:
         os.mkdir(pkl_directory + "\\" + direc)
 pkl_direcs = [pkl_directory + "\\" + x for x in dist_list_str]
 
-# %%
+# %% Fitting
 data_dict = {}
 dist_keys = ["drt", "ddt", "dmt"]
 fit_keys = ["hmc", "map", "hmc_masked", "map_masked"]
@@ -208,74 +205,14 @@ with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
             dist_dict[dist] = fit_dict
         data_dict[ident[i]] = dist_dict
 
-# %% Test Plot
-unit_scale = ""
-area = None
-if area:
-    unit = f"\ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
-else:
-    unit = f"\ \mathrm{{{unit_scale}}}\Omega$"
-color_dict = mpl_settings.bright_dict
-no_fill_markers = mpl_settings.no_fill_markers
-# pruning = ["", "_masked"]
-dist = dist_keys[0]
-hmc = copy.deepcopy(data_dict[ident[0]][dist][fit_keys[0]]) # hmc
-mAP = copy.deepcopy(data_dict[ident[0]][dist][fit_keys[1]]) # map
-hmc_masked = data_dict[ident[0]][dist][fit_keys[2]]  # hmc_masked
-mAP_masked = data_dict[ident[0]][dist][fit_keys[3]]  # map_masked
-fig, axes = plt.subplots(figsize=(8, 5.5))
-with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
-    hmc.plot_fit(
-        axes=axes,
-        area=area,
-        plot_type="nyquist",
-        label="HMC fit",
-        color=color_dict["blue"],
-        data_label="Data",
-        data_kw={
-            "marker": no_fill_markers[0],
-            "linewidths": 1,
-            "color": color_dict["black"],
-            "s": 10,
-            "alpha": 1,
-            "zorder": 2.5,
-        },
-        marker="",
-    )
-    mAP.plot_fit(
-        axes=axes,
-        area=area,
-        plot_type="nyquist",
-        label="MAP fit",
-        color=color_dict["red"],
-        plot_data=False,
-        marker="",
-        linestyle="dashed",
-        alpha=1,
-    )
 
-    funcs.set_equal_tickspace(axes, figure=fig)
-    axes.grid(visible=True)
-    axes.set_xlabel(f"$Z^\prime \ /" + unit)
-    axes.set_ylabel(
-        f"$-Z^{{\prime\prime}} \ /" + unit
-    )
-    axes.legend(
-        fontsize=12, frameon=True, framealpha=1, fancybox=False, edgecolor="black"
-    )
-    axes.set_axisbelow("line")
-    plt.gca().set_aspect("equal")
-    plt.tight_layout()
-    plt.show()
-
-# Very important change
-# %% Test loop
-'''for data in data_dict:
-    for dist in data_dict[data]:
-        for fit in data_dict[data][dist]:'''
 # %% Visualize DRT and impedance fit
 # plot impedance fit and recovered DRT
+fig_directory_fit = os.path.join(fig_directory, "FitImpedance")
+if not os.path.isdir(fig_directory_fit):
+    os.mkdir(fig_directory_fit)
 unit_scale = ""
+pruning = ["", " - masked"]
 area = None
 if area:
     unit = f"\ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
@@ -288,10 +225,12 @@ for data in data_dict:
     for dist in data_dict[data]:
         for i in range(2):
             idx = i * 2
-            hmc = copy.deepcopy(data_dict[data][dist][fit_keys[idx]]) # hmc
+            hmc = copy.deepcopy(data_dict[data][dist][fit_keys[idx]])  # hmc
             mAP = copy.deepcopy(data_dict[data][dist][fit_keys[idx + 1]])  # map
             fig, axes = plt.subplots(figsize=(8, 5.5))
-            with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
+            with contextlib.redirect_stdout(
+                funcs.FilteredStream(filtered_values=["f"])
+            ):
                 hmc.plot_fit(
                     axes=axes,
                     area=area,
@@ -324,65 +263,81 @@ for data in data_dict:
                 funcs.set_equal_tickspace(axes, figure=fig)
                 axes.grid(visible=True)
                 axes.set_xlabel(f"$Z^\prime \ /" + unit)
-                axes.set_ylabel(
-                    f"$-Z^{{\prime\prime}} \ /" + unit
-                )
+                axes.set_ylabel(f"$-Z^{{\prime\prime}} \ /" + unit)
                 axes.legend(
-                    fontsize=12, frameon=True, framealpha=1, fancybox=False, edgecolor="black"
+                    fontsize=12,
+                    frameon=True,
+                    framealpha=1,
+                    fancybox=False,
+                    edgecolor="black",
                 )
                 axes.set_axisbelow("line")
-                plt.suptitle(f"{data}| |{dist}")
+                plt.suptitle(f"{data} - {dist}{pruning[i]}")
                 plt.gca().set_aspect("equal")
                 plt.tight_layout()
+                plt.savefig(
+                    os.path.join(
+                        fig_directory_fit,
+                        f"{data} - {dist}{pruning[i]}-FitImpedance.png",
+                    )
+                )
                 plt.show()
+                plt.close()
 
+# %% Time Constant Tests
+tau = None
+fig, axes = plt.subplots()
+data_dict['v=1cms']['drt']['hmc'].plot_distribution(ax=axes, tau_plot=tau, color='k', label='HMC mean', ci_label='HMC 95% CI')
+data_dict['v=1cms']['drt']['map'].plot_distribution(ax=axes, tau_plot=tau, color='r', label='MAP')
+axes.legend()
+plt.figure(fig)
+plt.show()
+plt.close()
 # %%
-"""
-    # ax = set_aspect_ratio(ax, peis)
-    #axes = set_equal_tickspace(axes, figure=fig)
-    axes.grid(visible=True)
-    axes.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.legend()
-    # plt.tight_layout()
-    plt.gca().set_aspect('equal')
-    remove_legend_duplicate()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_FitImpedance.png"))
-    plt.close()
+fig_directory_time = os.path.join(fig_directory, "TimeConstantDistributions")
+if not os.path.isdir(fig_directory_time):
+    os.mkdir(fig_directory_time)
+unit_scale = ""
+pruning = ["", " - masked"]
+area = None
+color_dict = mpl_settings.bright_dict
+no_fill_markers = mpl_settings.no_fill_markers
 
-    ddt_hmc_list[i].plot_fit(axes=axes, plot_type='nyquist', color='k', label='HMC fit', data_label='Data')
-    ddt_map_list[i].plot_fit(axes=axes, plot_type='nyquist', color='r', label='MAP fit', plot_data=False)
-    # ax = set_aspect_ratio(ax, peis)
-    #axes = set_equal_tickspace(axes, figure=fig)
-    axes.grid(visible=True)
-    axes.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.legend()
-    # plt.tight_layout()
-    plt.gca().set_aspect('equal')
-    remove_legend_duplicate()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_FitImpedance.png"))
-    plt.close()
+for data in data_dict:
+    for dist in data_dict[data]:
+        for i in range(2):
+            idx = i * 2
+            hmc = copy.deepcopy(data_dict[data][dist][fit_keys[idx]])  # hmc
+            mAP = copy.deepcopy(data_dict[data][dist][fit_keys[idx + 1]])  # map
+            fig, axes = plt.subplots(figsize=(8, 5.5))
+            with contextlib.redirect_stdout(
+                funcs.FilteredStream(filtered_values=["f"])
+            ):
+                tau = None
+                hmc.plot_distribution(ax=axes, tau_plot=tau, color=color_dict["blue"], label='HMC mean', ci_label='HMC 95% CI')
+                mAP.plot_distribution(ax=axes, tau_plot=tau, color=color_dict["red"], label='MAP')
 
-    inv_multi_hmc_list[i].plot_fit(axes=axes, plot_type='nyquist', color='k', label='HMC fit', data_label='Data')
-    inv_multi_map_list[i].plot_fit(axes=axes, plot_type='nyquist', color='r', label='MAP fit', plot_data=False)
-    # ax = set_aspect_ratio(ax, peis)
-    #axes = set_equal_tickspace(axes, figure=fig)
-    axes.grid(visible=True)
-    axes.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.legend()
-    # plt.tight_layout()
-    plt.gca().set_aspect('equal')
-    remove_legend_duplicate()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_FitImpedance.png"))
-    plt.close()
+                funcs.set_equal_tickspace(axes, figure=fig)
+                axes.legend(
+                    fontsize=12,
+                    frameon=True,
+                    framealpha=1,
+                    fancybox=False,
+                    edgecolor="black",
+                )
+                axes.set_axisbelow("line")
+                plt.suptitle(f"{data} - {dist}{pruning[i]}")
+                plt.gca().set_aspect("equal")
+                print(f"{data} - {dist}{pruning[i]}")
+                #plt.tight_layout()
+                plt.savefig(
+                    os.path.join(
+                        fig_directory_time,
+                        f"{data} - {dist}{pruning[i]}-TimeConstantDistributions.png",
+                    )
+                )
+                plt.show()
+                plt.close()
 
 # %% Time Constant Distributions
 for i, dist in enumerate(dFs):
@@ -650,4 +605,3 @@ for file in figures:
     if '25mHz-20ppd' in name:
         shutil.move(file, os.path.join(fig_directory, '25mHz-20ppd'))
 """
-'''

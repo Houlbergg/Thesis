@@ -34,8 +34,9 @@ load_with_captions = True
 
 # %% Define Custom Functions
 
+
 def brute_eis(file):
-    '''
+    """
     Manual approach to parsing .mpt eis files
 
     Parameter
@@ -48,19 +49,26 @@ def brute_eis(file):
         Numpy array of the parsed data
     df: pd.DataFrame
         Pandas DataFrame using bayes_drt convention of column naming
-        '''
-    f = open(file, 'r')
-    line_two = f.readlines()[1] #Line two will say: "Nb of header lines: XX"
+    """
+    f = open(file, "r")
+    line_two = f.readlines()[1]  # Line two will say: "Nb of header lines: XX"
     f.close()
-    header_lines = int(np.array(line_two.split())[np.char.isnumeric(np.array(line_two.split()))].astype(int)) #Grabbing the numeric value of header lines
+    header_lines = int(
+        np.array(line_two.split())[
+            np.char.isnumeric(np.array(line_two.split()))
+        ].astype(int)
+    )  # Grabbing the numeric value of header lines
     data = np.genfromtxt(file, delimiter="\t", skip_header=int(header_lines))
 
     # Construct Pandas df because the bayes_drt package likes that
-    df = pd.DataFrame(data=data[:, 0:5], columns=['Freq', 'Zreal', 'Zimag', 'Zmod', 'Zphs'])
+    df = pd.DataFrame(
+        data=data[:, 0:5], columns=["Freq", "Zreal", "Zimag", "Zmod", "Zphs"]
+    )
     return data, df
 
+
 def set_aspect_ratio(ax, dataset):
-    '''
+    """
     Force the ratio between xmin, xmax, to be equal to ymin, ymax (and vice versa)
     Blatantly stolen from bayes_drt
     Adjusted for pyimpspec Datasets as compared to pandas DataFrames
@@ -69,14 +77,14 @@ def set_aspect_ratio(ax, dataset):
     Parameters
     ----------
     ax : matplotlib.axes._axes.Axes
-    	Axes on which to plot
+        Axes on which to plot
     dataset : pyimpspec.data.data_set.Dataset
         Pyimpspec DataSet containing the data to be plotted
 
     Returns
     -------
     None
-    '''
+    """
     pyimp = dataset.get_impedances()
     img = pyimp.imag
     real = pyimp.real
@@ -169,7 +177,6 @@ def set_aspect_ratio(ax, dataset):
     return
 
 
-
 def read_mpt(filepath):
     """
     CV parser from ecdh
@@ -191,14 +198,14 @@ def read_mpt(filepath):
 
     # with open(filepath, 'r', encoding= "iso-8859-1") as f:  #open the filepath for the mpt file
     #    lines = f.readlines()
-    with open(filepath, errors='ignore') as f:
+    with open(filepath, errors="ignore") as f:
         lines = f.readlines()
 
     # now we skip all the data in the start and jump straight to the dense data
     headerlines = 0
     for line in lines:
         if "Nb header lines :" in line:
-            headerlines = int(line.split(':')[-1])
+            headerlines = int(line.split(":")[-1])
             break  # breaks for loop when headerlines is found
 
     for i, line in enumerate(lines):
@@ -208,8 +215,7 @@ def read_mpt(filepath):
                 break
 
         if "Characteristic mass :" in line:
-            active_mass = float(line.split(
-                ':')[-1][:-3].replace(',', '.')) / 1000
+            active_mass = float(line.split(":")[-1][:-3].replace(",", ".")) / 1000
             # print("Active mass found in file to be: " + str(active_mass) + "g")
             break  # breaks loop when active mass is found
 
@@ -227,46 +233,49 @@ def read_mpt(filepath):
     del lines
     gc.collect()
 
-    big_df = pd.read_csv(filepath, header=headerlines -
-                                          whitelines - 1, sep="\t", encoding="ISO-8859-1")
+    big_df = pd.read_csv(
+        filepath, header=headerlines - whitelines - 1, sep="\t", encoding="ISO-8859-1"
+    )
     # print("Dataframe column names: {}".format(big_df.columns))
 
     # Start filling dataframe
-    if 'I/mA' in big_df.columns:
-        current_header = 'I/mA'
-    elif '<I>/mA' in big_df.columns:
-        current_header = '<I>/mA'
-    df = big_df[['mode', 'time/s', 'Ewe/V',
-                 current_header, 'cycle number', 'ox/red']]
+    if "I/mA" in big_df.columns:
+        current_header = "I/mA"
+    elif "<I>/mA" in big_df.columns:
+        current_header = "<I>/mA"
+    df = big_df[["mode", "time/s", "Ewe/V", current_header, "cycle number", "ox/red"]]
     # Change headers of df to be correct
-    df.rename(columns={current_header: '<I>/mA'}, inplace=True)
+    df.rename(columns={current_header: "<I>/mA"}, inplace=True)
 
     # If it's galvanostatic we want the capacity
-    mode = df['mode'].value_counts()  # Find occurences of modes
+    mode = df["mode"].value_counts()  # Find occurences of modes
     # Remove the count of modes with rest (if there are large rests, there might be more rest datapoints than GC/CV steps)
     mode = mode[mode.index != 3]
     mode = mode.idxmax()  # Picking out the mode with the maximum occurences
     # print("Found cycling mode: {}".format(modes[mode]))
 
     if mode == 1:
-        df = df.drt_hmc_pickle(big_df['Capacity/mA.h'])
-        df.rename(columns={'Capacity/mA.h': 'capacity/mAhg'}, inplace=True)
+        df = df.drt_hmc_pickle(big_df["Capacity/mA.h"])
+        df.rename(columns={"Capacity/mA.h": "capacity/mAhg"}, inplace=True)
         # the str.replace only works and is only needed if it is a string
-        if df.dtypes['capacity/mAhg'] == str:
-            df['capacity/mAhg'] = pd.to_numeric(
-                df['capacity/mAhg'].str.replace(',', '.'))
+        if df.dtypes["capacity/mAhg"] == str:
+            df["capacity/mAhg"] = pd.to_numeric(
+                df["capacity/mAhg"].str.replace(",", ".")
+            )
     del big_df  # deletes the dataframe
     gc.collect()  # Clean unused memory (which is the dataframe above)
     # Replace , by . and make numeric from strings. Mode is already interpreted as int.
     for col in df.columns:
-        if df.dtypes[col] == str:  # the str.replace only works and is only needed if it is a string
-            df[col] = pd.to_numeric(df[col].str.replace(',', '.'))
+        if (
+            df.dtypes[col] == str
+        ):  # the str.replace only works and is only needed if it is a string
+            df[col] = pd.to_numeric(df[col].str.replace(",", "."))
     # df['time/s'] = pd.to_numeric(df['time/s'].str.replace(',','.'))
     # df['Ewe/V'] = pd.to_numeric(df['Ewe/V'].str.replace(',','.'))
     # df['<I>/mA'] = pd.to_numeric(df['<I>/mA'].str.replace(',','.'))
     # df['cycle number'] = pd.to_numeric(df['cycle number'].str.replace(',','.')).astype('int32')
-    df.rename(columns={'ox/red': 'charge'}, inplace=True)
-    df['charge'].replace({1: True, 0: False}, inplace=True)
+    df.rename(columns={"ox/red": "charge"}, inplace=True)
+    df["charge"].replace({1: True, 0: False}, inplace=True)
 
     #    if mode == 2:
     # If it is CV data, then BioLogic counts the cycles in a weird way (starting new cycle when passing the point of the OCV, not when starting a charge or discharge..) so we need to count our own cycles
@@ -279,8 +288,9 @@ def read_mpt(filepath):
 
     return df
 
+
 def set_equal_tickspace(ax, figure=None):
-    '''
+    """
     Adjusts x and y tick-spacing to be equal to the lower of the two
 
     Parameters
@@ -294,7 +304,7 @@ def set_equal_tickspace(ax, figure=None):
     -------
     None.
 
-    '''
+    """
     assert isinstance(figure, Figure) or figure is None, figure
     if figure is None:
         assert ax is None
@@ -313,8 +323,9 @@ def set_equal_tickspace(ax, figure=None):
 
     return
 
+
 def remove_legend_duplicate():
-    #Removes legend duplicates
+    # Removes legend duplicates
     try:
         handles, labels = plt.gca().get_legend_handles_labels()
     except ValueError:
@@ -329,20 +340,20 @@ home = r"C:\Users\Houlberg\Documents\Thesis\Python"
 os.chdir(home)
 
 # Load stan files for unpickeling ??????
-sms = glob.glob('../bayes-drt2-main/bayes_drt2/stan_model_files/*.pkl')
+sms = glob.glob("../bayes-drt2-main/bayes_drt2/stan_model_files/*.pkl")
 # sms = glob.glob('Pickles/*.pkl')
 for file in sms:
     utils.load_pickle(file)
 
-exp_dir = os.path.join(home, r'Experiments')
-fig_dir = os.path.join(home, r'Figures')
-pkl_dir = os.path.join(home, r'Pickles')
+exp_dir = os.path.join(home, r"Experiments")
+fig_dir = os.path.join(home, r"Figures")
+pkl_dir = os.path.join(home, r"Pickles")
 # pkl = os.path.join(pkl_dir,'obj{}.pkl'.format('MAP'))
 
-tester = home + r'\Experiments'
+tester = home + r"\Experiments"
 # %% Selecting Experiment and establishing subfolders
 
-experiment = 'IRFB/FirstCell'
+experiment = "IRFB/FirstCell"
 if not os.path.isdir(os.path.join(exp_dir, experiment)):
     os.makedirs(os.path.join(exp_dir, experiment))
 
@@ -357,78 +368,105 @@ pkl_directory = os.path.join(pkl_dir, experiment)
 fig_directory = os.path.join(fig_dir, experiment)
 os.chdir(directory)
 
-if not os.path.isdir('Parsed'):
-    os.makedirs('Parsed')
+if not os.path.isdir("Parsed"):
+    os.makedirs("Parsed")
 
 # %% Matplotlib parameters
 # base = 'seaborn-v0_8' # -paper or -poster for smaller or larger figs ##Doesnt really work
 # size = 'seaborn-v0_8-poster'
 # ticks = 'seaborn-v0_8-ticks'
 # plt.style.use([base,size,ticks])
-bright_colors = ['#4477AA', '#EE6677', '#228833', '#CCBB44', '#66CCEE',
-                 '#AA3377', '#BBBBBB', '#000000']
-bright_names = ['blue', 'red', 'green', 'yellow', 'cyan', 'purple', 'grey', 'black']
+bright_colors = [
+    "#4477AA",
+    "#EE6677",
+    "#228833",
+    "#CCBB44",
+    "#66CCEE",
+    "#AA3377",
+    "#BBBBBB",
+    "#000000",
+]
+bright_names = ["blue", "red", "green", "yellow", "cyan", "purple", "grey", "black"]
 bright_dict = dict(zip(bright_names, bright_colors))
 
-contrast_colors = ['#004488', '#DDAA33', '#BB5566', '#000000']
-contrast_names = ['blue', 'yellow', 'red', 'black']
+contrast_colors = ["#004488", "#DDAA33", "#BB5566", "#000000"]
+contrast_names = ["blue", "yellow", "red", "black"]
 contrast_dict = dict(zip(contrast_names, contrast_colors))
 
-vibrant_colors = ['#EE7733', '#0077BB', '#33BBEE', '#EE3377', '#CC3311',
-                  '#009988', '#BBBBBB', '#000000']
-vibrant_names = ['orange', 'blue', 'cyan', 'magenta', 'red', 'teal', 'grey', 'black']
+vibrant_colors = [
+    "#EE7733",
+    "#0077BB",
+    "#33BBEE",
+    "#EE3377",
+    "#CC3311",
+    "#009988",
+    "#BBBBBB",
+    "#000000",
+]
+vibrant_names = ["orange", "blue", "cyan", "magenta", "red", "teal", "grey", "black"]
 vibrant_dict = dict(zip(vibrant_names, vibrant_colors))
 
-seaborn_colors = ['#4C72B0', '#55A868', '#C44E52', '#8172B2', '#CCB974', '#64B5CD']
+seaborn_colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974", "#64B5CD"]
 
-plt.rcParams['axes.prop_cycle'] = cycler(color=vibrant_colors)
-plt.rcParams['patch.facecolor'] = vibrant_colors[0]
+plt.rcParams["axes.prop_cycle"] = cycler(color=vibrant_colors)
+plt.rcParams["patch.facecolor"] = vibrant_colors[0]
 
 tick_size = 9
 label_size = 11
 # fig_width = 10
-plt.rcParams['figure.figsize'] = [8, 5.5]
-plt.rcParams['figure.dpi'] = 200
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['font.sans-serif'] = ['Arial', 'Liberation Sans', 'DejaVu Sans', 'Bitstream Vera Sans', 'sans-serif']
-plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+plt.rcParams["figure.figsize"] = [8, 5.5]
+plt.rcParams["figure.dpi"] = 200
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = [
+    "Arial",
+    "Liberation Sans",
+    "DejaVu Sans",
+    "Bitstream Vera Sans",
+    "sans-serif",
+]
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
 
-plt.rcParams['lines.markersize'] = 5
-plt.rcParams['xtick.labelsize'] = tick_size
-plt.rcParams['ytick.labelsize'] = tick_size
-plt.rcParams['axes.labelsize'] = label_size
+plt.rcParams["lines.markersize"] = 5
+plt.rcParams["xtick.labelsize"] = tick_size
+plt.rcParams["ytick.labelsize"] = tick_size
+plt.rcParams["axes.labelsize"] = label_size
 plt.rcParams["axes.axisbelow"] = True
-plt.rcParams['legend.fontsize'] = tick_size + 1
-plt.rcParams['legend.frameon'] = True
-plt.rcParams['legend.framealpha'] = 0.95
+plt.rcParams["legend.fontsize"] = tick_size + 1
+plt.rcParams["legend.frameon"] = True
+plt.rcParams["legend.framealpha"] = 0.95
 
 # %% Load Files and seperate by type.
 # REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
-files = glob.glob('Data/*.mpt')
+files = glob.glob("Data/*.mpt")
 
 # %% Parsing with pyimpspec
 dummy_freq = np.logspace(6, -2, 81)
-dummy_Z = np.ones_like(dummy_freq, dtype='complex128')
+dummy_Z = np.ones_like(dummy_freq, dtype="complex128")
 pyi_dummy = DataSet(dummy_freq, dummy_Z)
 
 parses = []
 for file in files:
-    string = 'Parsed/{}'.format(file.split('.')[0].split("\\")[1])
+    string = "Parsed/{}".format(file.split(".")[0].split("\\")[1])
     if not os.path.isdir(string):
         os.makedirs(string)
         try:
             parse = pyi.parse_data(file, file_format=".mpt")
             parses.append(parse)
             for i, cycle in enumerate(parse):
-                utils.save_pickle(cycle.to_dict(), os.path.join(  # .to_dict() might be unneccesary)
-                    string, 'Cycle_{}.pkl'.format(i)))
+                utils.save_pickle(
+                    cycle.to_dict(),
+                    os.path.join(  # .to_dict() might be unneccesary)
+                        string, "Cycle_{}.pkl".format(i)
+                    ),
+                )
         except:
             print("Pyimpspec could not parse file" + str(file))
     else:
         temp_list = []
         for i, cycle in enumerate(os.listdir(string)):
             pyi_pickle = utils.load_pickle(
-                os.path.join(string, 'Cycle_{}.pkl'.format(i)))
+                os.path.join(string, "Cycle_{}.pkl".format(i))
+            )
             parse = pyi_dummy.from_dict(pyi_pickle)
             temp_list.append(parse)
         parses.append(temp_list)
@@ -436,20 +474,20 @@ for file in files:
 # %% Selecting the wanted cycles
 # For this data set from IRFB First Cell
 # We want the 1st cycle for only LowFreq_Full
-#parses[4][0]
-pyi_columns = ['f', 'z_re', 'z_im', 'mod', 'phz']
+# parses[4][0]
+pyi_columns = ["f", "z_re", "z_im", "mod", "phz"]
 chosen = []
 chosen_masked = []
-ident = ['25mHz-20ppd']
+ident = ["25mHz-20ppd"]
 
 chosen.append(parses[4][0])
 dummy = parses[4][0].to_dataframe(columns=pyi_columns)
-mask = dummy['z_im'] < -0
-chosen_masked = dummy[dummy['z_im'] < -0]
+mask = dummy["z_im"] < -0
+chosen_masked = dummy[dummy["z_im"] < -0]
 chosen_masked.append(pyi.dataframe_to_data_sets(chosen_masked, path=files[4]))
 chosen_masked = list(zip(*chosen_masked))[0]
 # Construct Pandas df because bayes_drt package likes that
-columns = ['Freq', 'Zreal', 'Zimag', 'Zmod', 'Zphs']
+columns = ["Freq", "Zreal", "Zimag", "Zmod", "Zphs"]
 dFs = []
 dFs_masked = []
 for eis in chosen:
@@ -459,7 +497,7 @@ for eis in chosen_masked:
 
 # %% Raw Nyquist with inset
 
-unit_scale = ''
+unit_scale = ""
 area = 2.3**2
 subregions = [0.205, 0.255, -0.005, 0.045]
 subregions_area = [np.multiply(subregions, area)]
@@ -476,31 +514,34 @@ for i, exp in enumerate(chosen):
     ax.indicate_inset_zoom(ax_inset, edgecolor="black")
 
     set_equal_tickspace(ax_inset, figure=fig)
-    #ax_inset.xaxis.set_major_locator(ticker.MultipleLocator(base=0.05))
-    #ax_inset.yaxis.set_major_locator(ticker.MultipleLocator(base=0.05))
+    # ax_inset.xaxis.set_major_locator(ticker.MultipleLocator(base=0.05))
+    # ax_inset.yaxis.set_major_locator(ticker.MultipleLocator(base=0.05))
     ax.set_axisbelow(True)
     ax.grid(visible=True)
     ax_inset.set_axisbelow(True)
     ax_inset.grid(visible=True)
 
-
-    #ax_inset = set_equal_tickspace(ax_inset, figure=fig)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
+    # ax_inset = set_equal_tickspace(ax_inset, figure=fig)
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    ax.set_ylabel(
+        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+    )
     ax.legend()
 
-    plt.gca().set_aspect('equal')
+    plt.gca().set_aspect("equal")
     remove_legend_duplicate()
 
     plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_Nyquist_data_area_inset.png"))
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_Nyquist_data_area_inset.png")
+    )
     plt.show()
     plt.close()
 
 
 # %% Raw Nyquist without inset
 
-unit_scale = ''
+unit_scale = ""
 area = 2.3**2
 fig, ax = plt.subplots()
 for i, exp in enumerate(chosen):
@@ -510,14 +551,16 @@ for i, exp in enumerate(chosen):
     set_equal_tickspace(ax, figure=fig)
 
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    #ax.legend()
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    ax.set_ylabel(
+        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+    )
+    # ax.legend()
 
     # plt.tight_layout()
-plt.gca().set_aspect('equal')
-#remove_legend_duplicate()
-#plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.gca().set_aspect("equal")
+# remove_legend_duplicate()
+# plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
 plt.tight_layout()
 plt.savefig(os.path.join(fig_directory, str(ident[0]) + "_Nyquist_data_area.png"))
 plt.show()
@@ -525,7 +568,7 @@ plt.close()
 
 # %% Raw Nyquist without inset tail-removed
 
-unit_scale = ''
+unit_scale = ""
 area = 2.3**2  # Set to 1 for non-adjusted values
 fig, ax = plt.subplots()
 for i, exp in enumerate(chosen_masked):
@@ -535,39 +578,49 @@ for i, exp in enumerate(chosen_masked):
     set_equal_tickspace(ax, figure=fig)
 
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    #ax.legend()
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    ax.set_ylabel(
+        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+    )
+    # ax.legend()
 
     # plt.tight_layout()
-plt.gca().set_aspect('equal')
-#remove_legend_duplicate()
-#plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.gca().set_aspect("equal")
+# remove_legend_duplicate()
+# plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
 plt.tight_layout()
-plt.savefig(os.path.join(fig_directory, str(ident[0]) + "_Nyquist_data_area_masked.png"))
+plt.savefig(
+    os.path.join(fig_directory, str(ident[0]) + "_Nyquist_data_area_masked.png")
+)
 plt.show()
 plt.close()
 # %%
-'''
+"""
 #fig, ax = plt.subplots()
 fig, ax = pyi.mpl.plot_nyquist(chosen[0])
 plt.tight_layout()
 plt.show()
 #plt.savefig(os.path.join(fig_directory, f"Nyquist_data.png"))
-'''
+"""
 # %% Lin - KK ala pyimpspec
 mu_criterion = 0.80
 explorations = []
 for i, eis in enumerate(chosen):
     # os.remove(os.path.join(pkl_directory, 'LinKKTests.pkl'))  # Remove pickle to rerun
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_LinKKTests.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_LinKKTests.pkl")
+    ):
         subject = eis
         mu_criterion = 0.80
         tests = pyi.perform_exploratory_tests(subject, mu_criterion=mu_criterion)
-        utils.save_pickle(tests, os.path.join(pkl_directory, str(ident[i]) + '_LinKKTests.pkl'))
+        utils.save_pickle(
+            tests, os.path.join(pkl_directory, str(ident[i]) + "_LinKKTests.pkl")
+        )
         explorations.append(tests[0])
     else:
-        tests = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_LinKKTests.pkl'))
+        tests = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_LinKKTests.pkl")
+        )
     fig, ax = pyi.mpl.plot_mu_xps(tests, mu_criterion=mu_criterion)
     plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_ExploratoryTests.png"))
@@ -585,25 +638,27 @@ for i, test in enumerate(explorations):
     plt.close()
 
 # %% Plotting Lin KK fitted EIS
-unit_scale = ''  # If you want to swap to different scale. milli, kilo etc
+unit_scale = ""  # If you want to swap to different scale. milli, kilo etc
 
 for i, eis in enumerate(explorations):
     fig, ax = plt.subplots()
     imp = chosen[i].get_impedances()
-    ax.scatter(imp.real, -imp.imag, color=vibrant_colors[0], label='Data')
+    ax.scatter(imp.real, -imp.imag, color=vibrant_colors[0], label="Data")
     fit = eis.get_impedances()
     num_RC = eis.num_RC
-    ax.plot(fit.real, -fit.imag, color=vibrant_colors[1], label="#(RC)={}".format(num_RC))
+    ax.plot(
+        fit.real, -fit.imag, color=vibrant_colors[1], label="#(RC)={}".format(num_RC)
+    )
 
     # ax = set_aspect_ratio(ax, peis)
     set_equal_tickspace(ax, figure=fig)
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$")
+    ax.set_ylabel(f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$")
     ax.legend()
 
     # plt.tight_layout()
-    plt.gca().set_aspect('equal')
+    plt.gca().set_aspect("equal")
     remove_legend_duplicate()
 
     plt.tight_layout()
@@ -630,7 +685,6 @@ inv_multi_hmc_masked_list = []
 inv_multi_map_masked_list = []
 
 for i, eis in enumerate(dFs):
-
     freq, Z = fl.get_fZ(eis)
     freq_mask, Z_mask = fl.get_fZ(dFs_masked[i])
 
@@ -640,165 +694,245 @@ for i, eis in enumerate(dFs):
     drt_hmc_masked = Inverter(basis_freq=freq_mask)
     drt_map_masked = Inverter(basis_freq=freq_mask)
     # DDT
-    ddt_hmc = Inverter(distributions={'TP-DDT':  # user-defined distribution name
-                                          {'kernel': 'DDT',  # indicates that a DDT-type kernel should be used
-                                           'dist_type': 'parallel',
-                                           # indicates that the diffusion paths are in parallel
-                                           'symmetry': 'planar',  # indicates the geometry of the system
-                                           'bc': 'transmissive',  # indicates the boundary condition
-                                           'ct': False,  # indicates no simultaneous charge transfer
-                                           'basis_freq': np.logspace(6, -3, 91)
-                                           }
-                                      },
-                       basis_freq=np.logspace(6, -3, 91)  # use basis range large enough to capture full DDT
-                       )
+    ddt_hmc = Inverter(
+        distributions={
+            "TP-DDT": {  # user-defined distribution name
+                "kernel": "DDT",  # indicates that a DDT-type kernel should be used
+                "dist_type": "parallel",
+                # indicates that the diffusion paths are in parallel
+                "symmetry": "planar",  # indicates the geometry of the system
+                "bc": "transmissive",  # indicates the boundary condition
+                "ct": False,  # indicates no simultaneous charge transfer
+                "basis_freq": np.logspace(6, -3, 91),
+            }
+        },
+        basis_freq=np.logspace(
+            6, -3, 91
+        ),  # use basis range large enough to capture full DDT
+    )
     ddt_map = copy.deepcopy(ddt_hmc)
     ddt_hmc_masked = copy.deepcopy(ddt_hmc)
     ddt_map_masked = copy.deepcopy(ddt_hmc)
     # Multi distribution
     # for sp_dr: use xp_scale=0.8
-    inv_multi_hmc = Inverter(distributions={"DRT": {'kernel': 'DRT'},
-                                            'TPP-DDT': {'kernel': 'DDT',
-                                                        'symmetry': 'planar',
-                                                        'bc': 'transmissive',
-                                                        'dist_type': 'parallel',
-                                                        'x_scale': 0.8,
-                                                        'ct': False,  # indicates no simultaneous charge transfer
-                                                        'basis_freq': np.logspace(6, -3, 91)
-                                                        }
-                                            }
-                             )
+    inv_multi_hmc = Inverter(
+        distributions={
+            "DRT": {"kernel": "DRT"},
+            "TPP-DDT": {
+                "kernel": "DDT",
+                "symmetry": "planar",
+                "bc": "transmissive",
+                "dist_type": "parallel",
+                "x_scale": 0.8,
+                "ct": False,  # indicates no simultaneous charge transfer
+                "basis_freq": np.logspace(6, -3, 91),
+            },
+        }
+    )
     inv_multi_map = copy.deepcopy(inv_multi_hmc)
     inv_multi_hmc_masked = copy.deepcopy(inv_multi_hmc)
     inv_multi_map_masked = copy.deepcopy(inv_multi_hmc)
 
     # Perform HMC fit
-    file_pickle = os.path.join(pkl_directory, '{0}_{1}.pkl'.format(ident[i],drt_hmc))
-    file_pickle_core = os.path.join(pkl_directory, '{0}_{1}_core.pkl'.format(ident[i],drt_hmc))
+    file_pickle = os.path.join(pkl_directory, "{0}_{1}.pkl".format(ident[i], drt_hmc))
+    file_pickle_core = os.path.join(
+        pkl_directory, "{0}_{1}_core.pkl".format(ident[i], drt_hmc)
+    )
 
-    drt_hmc_pickle = os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc.pkl')
+    drt_hmc_pickle = os.path.join(pkl_directory, str(ident[i]) + "_drt_hmc.pkl")
     if not os.path.isfile(drt_hmc_pickle):
         start = time.time()
-        drt_hmc.fit(freq, Z, mode='sample')
+        drt_hmc.fit(freq, Z, mode="sample")
         elapsed = time.time() - start
-        print('HMC fit time {:.1f} s'.format(elapsed))
+        print("HMC fit time {:.1f} s".format(elapsed))
         utils.save_pickle(drt_hmc, drt_hmc_pickle)
-        drt_hmc.save_fit_data(drt_hmc_pickle + '_core', which='core')
-        #Change to Inverter.save_fit_data(..., which= 'core') #load_pickle wont work
+        drt_hmc.save_fit_data(drt_hmc_pickle + "_core", which="core")
+        # Change to Inverter.save_fit_data(..., which= 'core') #load_pickle wont work
     else:
         drt_hmc.load_fit_data(drt_hmc_pickle)
         drt_hmc = utils.load_pickle(drt_hmc_pickle)
 
-
     # Perform HMC fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_mask.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_drt_hmc_mask.pkl")
+    ):
         start = time.time()
-        drt_hmc_masked.fit(freq_mask, Z_mask, mode='sample')
+        drt_hmc_masked.fit(freq_mask, Z_mask, mode="sample")
         elapsed = time.time() - start
-        print('HMC fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(drt_hmc_masked, os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_mask.pkl'))
+        print("HMC fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            drt_hmc_masked,
+            os.path.join(pkl_directory, str(ident[i]) + "_drt_hmc_mask.pkl"),
+        )
     else:
-        drt_hmc_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_drt_hmc_mask.pkl'))
+        drt_hmc_masked = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_drt_hmc_mask.pkl")
+        )
 
     #  Perform MAP fit
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_drt_map.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + "_drt_map.pkl")):
         start = time.time()
-        drt_map.fit(freq, Z, mode='optimize')  # initialize from ridge solution
+        drt_map.fit(freq, Z, mode="optimize")  # initialize from ridge solution
         elapsed = time.time() - start
-        print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(drt_map, os.path.join(pkl_directory, str(ident[i]) + '_drt_map.pkl'))
+        print("MAP fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            drt_map, os.path.join(pkl_directory, str(ident[i]) + "_drt_map.pkl")
+        )
     else:
-        drt_map = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_drt_map.pkl'))
+        drt_map = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_drt_map.pkl")
+        )
 
     #  Perform MAP fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_drt_map_mask.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_drt_map_mask.pkl")
+    ):
         start = time.time()
-        drt_map_masked.fit(freq_mask, Z_mask, mode='sample')
+        drt_map_masked.fit(freq_mask, Z_mask, mode="sample")
         elapsed = time.time() - start
-        print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(drt_map_masked, os.path.join(pkl_directory, str(ident[i]) + '_drt_map_mask.pkl'))
+        print("MAP fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            drt_map_masked,
+            os.path.join(pkl_directory, str(ident[i]) + "_drt_map_mask.pkl"),
+        )
     else:
-        drt_map_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_drt_map_mask.pkl'))
+        drt_map_masked = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_drt_map_mask.pkl")
+        )
 
     # Perform DDT HMC fit
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + "_ddt_hmc.pkl")):
         start = time.time()
-        ddt_hmc.fit(freq, Z, mode='sample')
+        ddt_hmc.fit(freq, Z, mode="sample")
         elapsed = time.time() - start
-        print('HMC fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(ddt_hmc, os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc.pkl'))
+        print("HMC fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            ddt_hmc, os.path.join(pkl_directory, str(ident[i]) + "_ddt_hmc.pkl")
+        )
     else:
-        ddt_hmc = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc.pkl'))
+        ddt_hmc = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_ddt_hmc.pkl")
+        )
 
     # Perform DDT HMC fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_mask.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_ddt_hmc_mask.pkl")
+    ):
         start = time.time()
-        ddt_hmc_masked.fit(freq_mask, Z_mask, mode='sample')
+        ddt_hmc_masked.fit(freq_mask, Z_mask, mode="sample")
         elapsed = time.time() - start
-        print('HMC fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(ddt_hmc_masked, os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_mask.pkl'))
+        print("HMC fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            ddt_hmc_masked,
+            os.path.join(pkl_directory, str(ident[i]) + "_ddt_hmc_mask.pkl"),
+        )
     else:
-        ddt_hmc_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_hmc_mask.pkl'))
+        ddt_hmc_masked = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_ddt_hmc_mask.pkl")
+        )
 
     #  Perform DDT MAP fit
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map.pkl')):
+    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + "_ddt_map.pkl")):
         start = time.time()
-        ddt_map.fit(freq, Z, mode='optimize')  # initialize from ridge solution
+        ddt_map.fit(freq, Z, mode="optimize")  # initialize from ridge solution
         elapsed = time.time() - start
-        print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(ddt_map, os.path.join(pkl_directory, str(ident[i]) + '_ddt_map.pkl'))
+        print("MAP fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            ddt_map, os.path.join(pkl_directory, str(ident[i]) + "_ddt_map.pkl")
+        )
     else:
-        ddt_map = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map.pkl'))
+        ddt_map = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_ddt_map.pkl")
+        )
 
     #  Perform DDT MAP fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_mask.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_ddt_map_mask.pkl")
+    ):
         start = time.time()
-        ddt_map_masked.fit(freq_mask, Z_mask, mode='sample')
+        ddt_map_masked.fit(freq_mask, Z_mask, mode="sample")
         elapsed = time.time() - start
-        print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(ddt_map_masked, os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_mask.pkl'))
+        print("MAP fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            ddt_map_masked,
+            os.path.join(pkl_directory, str(ident[i]) + "_ddt_map_mask.pkl"),
+        )
     else:
-        ddt_map_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_ddt_map_mask.pkl'))
+        ddt_map_masked = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_ddt_map_mask.pkl")
+        )
 
     # Perform DRT+DDT HMC fit
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_hmc.pkl")
+    ):
         start = time.time()
-        inv_multi_hmc.fit(freq, Z, mode='sample', nonneg=True)
+        inv_multi_hmc.fit(freq, Z, mode="sample", nonneg=True)
         elapsed = time.time() - start
-        print('HMC fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(inv_multi_hmc, os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc.pkl'))
+        print("HMC fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            inv_multi_hmc,
+            os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_hmc.pkl"),
+        )
     else:
-        inv_multi_hmc = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc.pkl'))
+        inv_multi_hmc = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_hmc.pkl")
+        )
 
     #  Perform DRT+DDT MAP fit
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_map.pkl")
+    ):
         start = time.time()
-        inv_multi_map.fit(freq, Z, mode='optimize', nonneg=True)  # initialize from ridge solution
+        inv_multi_map.fit(
+            freq, Z, mode="optimize", nonneg=True
+        )  # initialize from ridge solution
         elapsed = time.time() - start
-        print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(inv_multi_map, os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map.pkl'))
+        print("MAP fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            inv_multi_map,
+            os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_map.pkl"),
+        )
     else:
-        inv_multi_map = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map.pkl'))
+        inv_multi_map = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_map.pkl")
+        )
 
     # Perform DRT+DDT HMC fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_mask.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_hmc_mask.pkl")
+    ):
         start = time.time()
-        inv_multi_hmc_masked.fit(freq_mask, Z_mask, mode='sample', nonneg=True)
+        inv_multi_hmc_masked.fit(freq_mask, Z_mask, mode="sample", nonneg=True)
         elapsed = time.time() - start
-        print('HMC fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(inv_multi_hmc, os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_mask.pkl'))
+        print("HMC fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            inv_multi_hmc,
+            os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_hmc_mask.pkl"),
+        )
     else:
-        inv_multi_hmc = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_hmc_mask.pkl'))
+        inv_multi_hmc = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_hmc_mask.pkl")
+        )
 
     #  Perform DRT+DDT MAP fit with initial tail removed
-    if not os.path.isfile(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_mask.pkl')):
+    if not os.path.isfile(
+        os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_map_mask.pkl")
+    ):
         start = time.time()
-        inv_multi_map_masked.fit(freq_mask, Z_mask, mode='optimize', nonneg=True)  # initialize from ridge solution
+        inv_multi_map_masked.fit(
+            freq_mask, Z_mask, mode="optimize", nonneg=True
+        )  # initialize from ridge solution
         elapsed = time.time() - start
-        print('MAP fit time {:.1f} s'.format(elapsed))
-        utils.save_pickle(inv_multi_map_masked, os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_mask.pkl'))
+        print("MAP fit time {:.1f} s".format(elapsed))
+        utils.save_pickle(
+            inv_multi_map_masked,
+            os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_map_mask.pkl"),
+        )
     else:
-        inv_multi_map_masked = utils.load_pickle(os.path.join(pkl_directory, str(ident[i]) + '_inv_multi_map_mask.pkl'))
+        inv_multi_map_masked = utils.load_pickle(
+            os.path.join(pkl_directory, str(ident[i]) + "_inv_multi_map_mask.pkl")
+        )
 
     drt_hmc_list.append(drt_hmc)
     drt_map_list.append(drt_map)
@@ -819,138 +953,207 @@ for i, eis in enumerate(dFs):
 for i, exp in enumerate(dFs):
     fig, axes = plt.subplots()
 
-    drt_hmc_list[i].plot_fit(axes=axes, plot_type='nyquist', color='k', label='HMC fit', data_label='Data')
-    drt_map_list[i].plot_fit(axes=axes, plot_type='nyquist', color='r', label='MAP fit', plot_data=False)
+    drt_hmc_list[i].plot_fit(
+        axes=axes, plot_type="nyquist", color="k", label="HMC fit", data_label="Data"
+    )
+    drt_map_list[i].plot_fit(
+        axes=axes, plot_type="nyquist", color="r", label="MAP fit", plot_data=False
+    )
     # ax = set_aspect_ratio(ax, peis)
-    #axes = set_equal_tickspace(axes, figure=fig)
+    # axes = set_equal_tickspace(axes, figure=fig)
     axes.grid(visible=True)
-    axes.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
+    axes.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$")
+    axes.set_ylabel(f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$")
     axes.legend()
     # plt.tight_layout()
-    plt.gca().set_aspect('equal')
+    plt.gca().set_aspect("equal")
     remove_legend_duplicate()
     plt.figure(fig)
-plt.tight_layout()
+
     plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_FitImpedance.png"))
     plt.close()
 
-    ddt_hmc_list[i].plot_fit(axes=axes, plot_type='nyquist', color='k', label='HMC fit', data_label='Data')
-    ddt_map_list[i].plot_fit(axes=axes, plot_type='nyquist', color='r', label='MAP fit', plot_data=False)
+    ddt_hmc_list[i].plot_fit(
+        axes=axes, plot_type="nyquist", color="k", label="HMC fit", data_label="Data"
+    )
+    ddt_map_list[i].plot_fit(
+        axes=axes, plot_type="nyquist", color="r", label="MAP fit", plot_data=False
+    )
     # ax = set_aspect_ratio(ax, peis)
-    #axes = set_equal_tickspace(axes, figure=fig)
+    # axes = set_equal_tickspace(axes, figure=fig)
     axes.grid(visible=True)
-    axes.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
+    axes.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$")
+    axes.set_ylabel(f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$")
     axes.legend()
     # plt.tight_layout()
-    plt.gca().set_aspect('equal')
+    plt.gca().set_aspect("equal")
     remove_legend_duplicate()
     plt.figure(fig)
-plt.tight_layout()
+
     plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_FitImpedance.png"))
     plt.close()
 
-    inv_multi_hmc_list[i].plot_fit(axes=axes, plot_type='nyquist', color='k', label='HMC fit', data_label='Data')
-    inv_multi_map_list[i].plot_fit(axes=axes, plot_type='nyquist', color='r', label='MAP fit', plot_data=False)
+    inv_multi_hmc_list[i].plot_fit(
+        axes=axes, plot_type="nyquist", color="k", label="HMC fit", data_label="Data"
+    )
+    inv_multi_map_list[i].plot_fit(
+        axes=axes, plot_type="nyquist", color="r", label="MAP fit", plot_data=False
+    )
     # ax = set_aspect_ratio(ax, peis)
-    #axes = set_equal_tickspace(axes, figure=fig)
+    # axes = set_equal_tickspace(axes, figure=fig)
     axes.grid(visible=True)
-    axes.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$')
-    axes.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$')
+    axes.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega$")
+    axes.set_ylabel(f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega$")
     axes.legend()
     # plt.tight_layout()
-    plt.gca().set_aspect('equal')
+    plt.gca().set_aspect("equal")
     remove_legend_duplicate()
     plt.figure(fig)
-plt.tight_layout()
     plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_FitImpedance.png"))
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_FitImpedance.png")
+    )
     plt.close()
 
 # %% Time Constant Distributions
 for i, dist in enumerate(dFs):
-    #tau_drt = drt_map_list[i].distributions['DRT']['tau']
+    # tau_drt = drt_map_list[i].distributions['DRT']['tau']
     tau_drt = None
     fig, axes = plt.subplots()
-    drt_hmc_list[i].plot_distribution(ax=axes, tau_plot=tau_drt, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    drt_map_list[i].plot_distribution(ax=axes, tau_plot=tau_drt, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
+    drt_hmc_list[i].plot_distribution(
+        ax=axes, tau_plot=tau_drt, color="k", label="HMC mean", ci_label="HMC 95% CI"
+    )
+    drt_map_list[i].plot_distribution(ax=axes, tau_plot=tau_drt, color="r", label="MAP")
+    sec_xaxis = [
+        x
+        for x in axes.get_children()
+        if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)
+    ][0]
+    sec_xaxis.set_xlabel("$f$ / Hz")
     axes.legend()
     plt.figure(fig)
-plt.tight_layout()
+
     plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT.png"))
     plt.close()
 
-    #tau_ddt = ddt_map_list[i].distributions['TP-DDT']['tau']
+    # tau_ddt = ddt_map_list[i].distributions['TP-DDT']['tau']
     tau_ddt = None
     fig, axes = plt.subplots()
-    ddt_hmc_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    ddt_map_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
+    ddt_hmc_list[i].plot_distribution(
+        ax=axes, tau_plot=tau_ddt, color="k", label="HMC mean", ci_label="HMC 95% CI"
+    )
+    ddt_map_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt, color="r", label="MAP")
+    sec_xaxis = [
+        x
+        for x in axes.get_children()
+        if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)
+    ][0]
+    sec_xaxis.set_xlabel("$f$ / Hz")
     axes.legend()
     plt.figure(fig)
-plt.tight_layout()
+
     plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT.png"))
     plt.close()
 
-    #tau_multi = inv_multi_map_list[i].distributions['DRT']['tau']
+    # tau_multi = inv_multi_map_list[i].distributions['DRT']['tau']
     tau_multi = None
     fig, axes = plt.subplots()
-    inv_multi_hmc_list[i].plot_distribution(ax=axes, tau_plot=tau_multi, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    inv_multi_map_list[i].plot_distribution(ax=axes, tau_plot=tau_multi, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
+    inv_multi_hmc_list[i].plot_distribution(
+        ax=axes, tau_plot=tau_multi, color="k", label="HMC mean", ci_label="HMC 95% CI"
+    )
+    inv_multi_map_list[i].plot_distribution(
+        ax=axes, tau_plot=tau_multi, color="r", label="MAP"
+    )
+    sec_xaxis = [
+        x
+        for x in axes.get_children()
+        if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)
+    ][0]
+    sec_xaxis.set_xlabel("$f$ / Hz")
     axes.legend()
     plt.figure(fig)
-plt.tight_layout()
+
     plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT.png"))
     plt.close()
 
-    #tau_drt_mask = drt_map_masked_list[i].distributions['DRT']['tau']
+    # tau_drt_mask = drt_map_masked_list[i].distributions['DRT']['tau']
     tau_drt_mask = None
     fig, axes = plt.subplots()
-    drt_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_drt_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    drt_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_drt_mask, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
+    drt_hmc_masked_list[i].plot_distribution(
+        ax=axes,
+        tau_plot=tau_drt_mask,
+        color="k",
+        label="HMC mean",
+        ci_label="HMC 95% CI",
+    )
+    drt_map_masked_list[i].plot_distribution(
+        ax=axes, tau_plot=tau_drt_mask, color="r", label="MAP"
+    )
+    sec_xaxis = [
+        x
+        for x in axes.get_children()
+        if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)
+    ][0]
+    sec_xaxis.set_xlabel("$f$ / Hz")
     axes.legend()
     plt.figure(fig)
-plt.tight_layout()
+
     plt.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_masked.png"))
     plt.close()
 
-    #tau_ddt_mask = ddt_map_masked_list[i].distributions['TP-DDT']['tau']
+    # tau_ddt_mask = ddt_map_masked_list[i].distributions['TP-DDT']['tau']
     tau_ddt_mask = None
     fig, axes = plt.subplots()
-    ddt_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    ddt_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt_mask, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
+    ddt_hmc_masked_list[i].plot_distribution(
+        ax=axes,
+        tau_plot=tau_ddt_mask,
+        color="k",
+        label="HMC mean",
+        ci_label="HMC 95% CI",
+    )
+    ddt_map_masked_list[i].plot_distribution(
+        ax=axes, tau_plot=tau_ddt_mask, color="r", label="MAP"
+    )
+    sec_xaxis = [
+        x
+        for x in axes.get_children()
+        if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)
+    ][0]
+    sec_xaxis.set_xlabel("$f$ / Hz")
     axes.legend()
     plt.figure(fig)
-plt.tight_layout()
+
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_masked.png"))
     plt.close()
 
-    #tau_multi_mask = inv_multi_map_masked_list[i].distributions['DRT']['tau']
+    # tau_multi_mask = inv_multi_map_masked_list[i].distributions['DRT']['tau']
     tau_multi_mask = None
     fig, axes = plt.subplots()
-    inv_multi_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_multi_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    inv_multi_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_multi_mask, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
+    inv_multi_hmc_masked_list[i].plot_distribution(
+        ax=axes,
+        tau_plot=tau_multi_mask,
+        color="k",
+        label="HMC mean",
+        ci_label="HMC 95% CI",
+    )
+    inv_multi_map_masked_list[i].plot_distribution(
+        ax=axes, tau_plot=tau_multi_mask, color="r", label="MAP"
+    )
+    sec_xaxis = [
+        x
+        for x in axes.get_children()
+        if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)
+    ][0]
+    sec_xaxis.set_xlabel("$f$ / Hz")
     axes.legend()
     plt.figure(fig)
-plt.tight_layout()
+
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_masked.png"))
     plt.close()
 
@@ -963,90 +1166,106 @@ for i, dist in enumerate(dFs):
     drt_hmc_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
-plt.tight_layout()
+
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     drt_hmc_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals_masked.png"))
+
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals_masked.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     ddt_hmc_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
-plt.tight_layout()
+
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     ddt_hmc_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals_masked.png"))
+
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals_masked.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     inv_multi_hmc_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals.png"))
+
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     inv_multi_hmc_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals_masked.png"))
+
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals_masked.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     drt_map_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
-plt.tight_layout()
+
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     drt_map_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals_masked.png"))
+
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals_masked.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     ddt_map_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
-plt.tight_layout()
+
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals.png"))
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     ddt_map_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals_masked.png"))
+
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals_masked.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     inv_multi_map_list[i].plot_residuals(axes=axes)
     # fig.suptitle("Bayes Estimated Error Structure")
     plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals.png"))
+
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
     inv_multi_map_masked_list[i].plot_residuals(axes=axes)
     plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals_masked.png"))
+
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals_masked.png")
+    )
     plt.close()
 # plot true error structure in miliohms. Cant with this data
 # p = axes[0].plot(freq, 3*Zdf['sigma_re'] * 1000, ls='--')
@@ -1057,14 +1276,15 @@ plt.tight_layout()
 # %% Peak fitting
 # Only fit peaks that have a prominence of >= 5% of the estimated polarization resistance
 for i, dist in enumerate(dFs):
-
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     drt_map_list[i].fit_peaks(prom_rthresh=0.05)
     drt_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    drt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    drt_map_list[i].plot_peak_fit(
+        ax=axes[1], plot_individual_peaks=True
+    )  # Plot the individual peaks
+    axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
     plt.figure(fig)
-plt.tight_layout()
+
     fig.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits.png"))
     plt.close()
@@ -1072,10 +1292,12 @@ plt.tight_layout()
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     ddt_map_list[i].fit_peaks(prom_rthresh=0.05)
     ddt_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    ddt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    ddt_map_list[i].plot_peak_fit(
+        ax=axes[1], plot_individual_peaks=True
+    )  # Plot the individual peaks
+    axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
     plt.figure(fig)
-plt.tight_layout()
+
     fig.tight_layout()
     plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits.png"))
     plt.close()
@@ -1083,24 +1305,32 @@ plt.tight_layout()
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     inv_multi_map_list[i].fit_peaks(prom_rthresh=0.05)
     inv_multi_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    inv_multi_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    inv_multi_map_list[i].plot_peak_fit(
+        ax=axes[1], plot_individual_peaks=True
+    )  # Plot the individual peaks
+    axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
     plt.figure(fig)
-plt.tight_layout()
+
     fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits.png"))
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     try:
         drt_map_masked_list[i].fit_peaks(prom_rthresh=0.05)
         drt_map_masked_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-        drt_map_masked_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-        axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        drt_map_masked_list[i].plot_peak_fit(
+            ax=axes[1], plot_individual_peaks=True
+        )  # Plot the individual peaks
+        axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
         plt.figure(fig)
-plt.tight_layout()
+
         fig.tight_layout()
-        plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits_masked.png"))
+        plt.savefig(
+            os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits_masked.png")
+        )
         plt.close()
     except:
         print("Error with file " + str(chosen[i]) + "For DRT Non-zero Peak Fitting")
@@ -1108,28 +1338,36 @@ plt.tight_layout()
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     ddt_map_list[i].fit_peaks(prom_rthresh=0.05)
     ddt_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    ddt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    ddt_map_list[i].plot_peak_fit(
+        ax=axes[1], plot_individual_peaks=True
+    )  # Plot the individual peaks
+    axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
     plt.figure(fig)
-plt.tight_layout()
+
     fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits_masked.png"))
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits_masked.png")
+    )
     plt.close()
 
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     inv_multi_map_list[i].fit_peaks(prom_rthresh=0.05)
     inv_multi_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    inv_multi_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    inv_multi_map_list[i].plot_peak_fit(
+        ax=axes[1], plot_individual_peaks=True
+    )  # Plot the individual peaks
+    axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
     plt.figure(fig)
-plt.tight_layout()
+
     fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits_masked.png"))
+    plt.savefig(
+        os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits_masked.png")
+    )
     plt.close()
 
-#%% Re sort files
+# %% Re sort files
 
-figures = glob.glob(os.path.join(fig_directory, '*'))
+figures = glob.glob(os.path.join(fig_directory, "*"))
 
 for iden in ident:
     if not os.path.isdir(os.path.join(fig_directory, str(iden))):
@@ -1137,5 +1375,5 @@ for iden in ident:
 
 for file in figures:
     name = os.path.basename(file)
-    if '25mHz-20ppd' in name:
-        shutil.move(file, os.path.join(fig_directory, '25mHz-20ppd'))
+    if "25mHz-20ppd" in name:
+        shutil.move(file, os.path.join(fig_directory, "25mHz-20ppd"))

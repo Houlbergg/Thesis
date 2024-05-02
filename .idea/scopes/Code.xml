@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Code" pattern="file[Thesis]:Python//*.py&amp;&amp;!file[Thesis]:Python/bayes-drt2-main//*" />
+</component>
