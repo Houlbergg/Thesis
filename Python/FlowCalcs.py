@@ -74,4 +74,5 @@ i_L = []
 for vv in v_e:
     i_L.append(n * F * k_m(vv))
 
-Q_naive = ((current / 1000) / (n * F * C_b)) * 60000  # Naive flow rate in mL/min
+Q_naive = ((current / 1000) / (n * F * C_b)) # Naive flow rate in L/s
+

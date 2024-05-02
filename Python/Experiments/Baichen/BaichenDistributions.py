@@ -130,19 +130,19 @@ with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
         ),  # use basis range large enough to capture full DDT
     )
     inverter_list = [drt, ddt, dmt]
-    dist_list_str = ["drt", "ddt", "dmt"]
-    fit_list = ["hmc", "map", "hmc_masked", "map_masked"]
+dist_list_str = ["drt", "ddt", "dmt"]
+fit_list = ["hmc", "map", "hmc_masked", "map_masked"]
 
-    for direc in dist_list_str:
-        if not os.path.isdir(pkl_directory + "\\" + direc):
-            os.mkdir(pkl_directory + "\\" + direc)
-    pkl_direcs = [pkl_directory + "\\" + x for x in dist_list_str]
+for direc in dist_list_str:
+    if not os.path.isdir(pkl_directory + "\\" + direc):
+        os.mkdir(pkl_directory + "\\" + direc)
+pkl_direcs = [pkl_directory + "\\" + x for x in dist_list_str]
 
 # %%
+data_dict = {}
+dist_keys = ["drt", "ddt", "dmt"]
+fit_keys = ["hmc", "map", "hmc_masked", "map_masked"]
 with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
-    data_dict = {}
-    dist_keys = ["drt", "ddt", "dmt"]
-    fit_keys = ["hmc", "map", "hmc_masked", "map_masked"]
     for i, eis in enumerate(dFs):
         freq, Z = fl.get_fZ(eis)
         freq_mask, Z_mask = fl.get_fZ(dFs_masked[i])
@@ -209,19 +209,25 @@ with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
         data_dict[ident[i]] = dist_dict
 
 # %% Test Plot
+unit_scale = ""
+area = None
+if area:
+    unit = f"\ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+else:
+    unit = f"\ \mathrm{{{unit_scale}}}\Omega$"
 color_dict = mpl_settings.bright_dict
 no_fill_markers = mpl_settings.no_fill_markers
 # pruning = ["", "_masked"]
 dist = dist_keys[0]
-hmc = data_dict[ident[0]][dist][fit_keys[0]]  # hmc
-mAP = data_dict[ident[0]][dist][fit_keys[1]]  # map
+hmc = copy.deepcopy(data_dict[ident[0]][dist][fit_keys[0]]) # hmc
+mAP = copy.deepcopy(data_dict[ident[0]][dist][fit_keys[1]]) # map
 hmc_masked = data_dict[ident[0]][dist][fit_keys[2]]  # hmc_masked
 mAP_masked = data_dict[ident[0]][dist][fit_keys[3]]  # map_masked
-unit_scale = ""
 fig, axes = plt.subplots(figsize=(8, 5.5))
 with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
     hmc.plot_fit(
         axes=axes,
+        area=area,
         plot_type="nyquist",
         label="HMC fit",
         color=color_dict["blue"],
@@ -238,6 +244,7 @@ with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
     )
     mAP.plot_fit(
         axes=axes,
+        area=area,
         plot_type="nyquist",
         label="MAP fit",
         color=color_dict["red"],
@@ -249,9 +256,9 @@ with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
 
     funcs.set_equal_tickspace(axes, figure=fig)
     axes.grid(visible=True)
-    axes.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    axes.set_xlabel(f"$Z^\prime \ /" + unit)
     axes.set_ylabel(
-        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+        f"$-Z^{{\prime\prime}} \ /" + unit
     )
     axes.legend(
         fontsize=12, frameon=True, framealpha=1, fancybox=False, edgecolor="black"
@@ -262,57 +269,74 @@ with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
     plt.show()
 
 # Very important change
+# %% Test loop
+'''for data in data_dict:
+    for dist in data_dict[data]:
+        for fit in data_dict[data][dist]:'''
 # %% Visualize DRT and impedance fit
 # plot impedance fit and recovered DRT
-'''
-pruning = ["", "_masked"]
-for distri in data_list:
-    for d in distri:
-        dist = "_".join(d[0].distributions.keys())
+unit_scale = ""
+area = None
+if area:
+    unit = f"\ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+else:
+    unit = f"\ \mathrm{{{unit_scale}}}\Omega$"
+color_dict = mpl_settings.bright_dict
+no_fill_markers = mpl_settings.no_fill_markers
+
+for data in data_dict:
+    for dist in data_dict[data]:
         for i in range(2):
             idx = i * 2
-            hmc = d[idx]
-            mAP = d[idx + 1]
-            unit_scale = ""
+            hmc = copy.deepcopy(data_dict[data][dist][fit_keys[idx]]) # hmc
+            mAP = copy.deepcopy(data_dict[data][dist][fit_keys[idx + 1]])  # map
             fig, axes = plt.subplots(figsize=(8, 5.5))
-            hmc.plot_fit(
-                axes=axes,
-                plot_type="nyquist",
-                label="HMC fit",
-                data_label="Data",
-                marker=None,
-            )
-            mAP.plot_fit(
-                axes=axes,
-                plot_type="nyquist",
-                label="MAP fit",
-                plot_data=False,
-                marker=None,
-            )
-
-            # funcs.set_equal_tickspace(axes, figure=fig)
-            axes.grid(visible=True)
-            axes.set_xlabel(
-                f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
-            )
-            axes.set_ylabel(
-                f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
-            )
-            axes.legend()
-            axes.set_axisbelow("line")
-
-            # plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
-            plt.gca().set_aspect("equal")
-            plt.tight_layout()
-            plt.savefig(
-                os.path.join(
-                    fig_directory,
-                    ident[i] + "_" + dist + pruning[i] + "_FitImpedance.png",
+            with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
+                hmc.plot_fit(
+                    axes=axes,
+                    area=area,
+                    plot_type="nyquist",
+                    label="HMC fit",
+                    color=color_dict["blue"],
+                    data_label="Data",
+                    data_kw={
+                        "marker": no_fill_markers[0],
+                        "linewidths": 1,
+                        "color": color_dict["black"],
+                        "s": 10,
+                        "alpha": 1,
+                        "zorder": 2.5,
+                    },
+                    marker="",
                 )
-            )
-            plt.close()
+                mAP.plot_fit(
+                    axes=axes,
+                    area=area,
+                    plot_type="nyquist",
+                    label="MAP fit",
+                    color=color_dict["red"],
+                    plot_data=False,
+                    marker="",
+                    linestyle="dashed",
+                    alpha=1,
+                )
 
+                funcs.set_equal_tickspace(axes, figure=fig)
+                axes.grid(visible=True)
+                axes.set_xlabel(f"$Z^\prime \ /" + unit)
+                axes.set_ylabel(
+                    f"$-Z^{{\prime\prime}} \ /" + unit
+                )
+                axes.legend(
+                    fontsize=12, frameon=True, framealpha=1, fancybox=False, edgecolor="black"
+                )
+                axes.set_axisbelow("line")
+                plt.suptitle(f"{data}| |{dist}")
+                plt.gca().set_aspect("equal")
+                plt.tight_layout()
+                plt.show()
 
+# %%
 """
     # ax = set_aspect_ratio(ax, peis)
     #axes = set_equal_tickspace(axes, figure=fig)
