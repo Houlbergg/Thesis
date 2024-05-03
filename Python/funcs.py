@@ -10,6 +10,7 @@ import pyimpspec as pyi
 from matplotlib.figure import Figure
 import pickle
 import io
+import warnings
 
 
 # Define Custom Functions (And Class :) )
@@ -21,6 +22,14 @@ class FilteredStream(io.StringIO):
     def write(self, msg):
         if not any(filtered_value in msg for filtered_value in self.filtered_values):
             super().write(msg)
+
+    def flush(self):
+        pass  # Override flush method to prevent clearing the buffer
+
+    def write_warning(self, message, category, filename, lineno, file=None, line=None):
+        if not any(filtered_value in message for filtered_value in self.filtered_values):
+            formatted_warning = warnings.formatwarning(message, category, filename, lineno, line)
+            self.write(formatted_warning)
 
 
 def save_pickle(obj, file):
@@ -363,8 +372,10 @@ def remove_legend_duplicate():
         handles, labels = plt.gca().get_legend_handles_labels()
     except ValueError:
         print("No plot available")
+        return
     by_label = dict(zip(labels, handles))
     plt.legend(by_label.values(), by_label.keys())
+    return
 
 
 def create_mask_notail(dataset):
@@ -382,17 +393,16 @@ def create_mask_notail(dataset):
     return dataset_masked, mask
 
 
-def reset_pickles(path):
+def reset_files(path, extension):
     """
-    Remove all pickles in the given directory.
+    Remove all files of given type in the given directory.
 
     Args:
         path (str): The path to the directory.
+        extension (str): The file extension type to remove.
     """
-    # Remove all pickles in the given directory
-    # os.remove(path + '/*.pkl')
-    # os.remove(path + '/*.h
-    files = glob.glob(path + "**.pkl")
+
+    files = glob.glob(path + "**." + extension, recursive=True)
     [os.remove(x) for x in files]
 
     return

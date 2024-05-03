@@ -3,28 +3,23 @@
 """
 import contextlib
 import warnings
-
-warnings.filterwarnings("ignore", category=RuntimeWarning)
-# Init
-
 import glob
 import os
 import copy
 
-import matplotlib.pyplot as plt
+import funcs
+import statics
 import mpl_settings
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyimpspec as pyi
 
 import bayes_drt2.file_load as fl
-import matplotlib.axes._secondary_axes
 from bayes_drt2.inversion import Inverter
 
-import funcs
-import statics
-
+warnings.showwarning = funcs.FilteredStream().write_warning
 pd.options.mode.chained_assignment = None  # default='warn'
 
 # %% Set folders
@@ -139,7 +134,8 @@ pkl_direcs = [pkl_directory + "\\" + x for x in dist_list_str]
 data_dict = {}
 dist_keys = ["drt", "ddt", "dmt"]
 fit_keys = ["hmc", "map", "hmc_masked", "map_masked"]
-with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])):
+with contextlib.redirect_stdout(funcs.FilteredStream(filtered_values=["f"])), warnings.catch_warnings():
+    warnings.filterwarnings("ignore", message="overflow encountered")
     for i, eis in enumerate(dFs):
         freq, Z = fl.get_fZ(eis)
         freq_mask, Z_mask = fl.get_fZ(dFs_masked[i])
@@ -229,7 +225,7 @@ for data in data_dict:
             mAP = copy.deepcopy(data_dict[data][dist][fit_keys[idx + 1]])  # map
             fig, axes = plt.subplots(figsize=(8, 5.5))
             with contextlib.redirect_stdout(
-                funcs.FilteredStream(filtered_values=["f"])
+                funcs.FilteredStream(filtered_values=["f",])
             ):
                 hmc.plot_fit(
                     axes=axes,
@@ -284,16 +280,7 @@ for data in data_dict:
                 plt.show()
                 plt.close()
 
-# %% Time Constant Tests
-tau = None
-fig, axes = plt.subplots()
-data_dict['v=1cms']['drt']['hmc'].plot_distribution(ax=axes, tau_plot=tau, color='k', label='HMC mean', ci_label='HMC 95% CI')
-data_dict['v=1cms']['drt']['map'].plot_distribution(ax=axes, tau_plot=tau, color='r', label='MAP')
-axes.legend()
-plt.figure(fig)
-plt.show()
-plt.close()
-# %%
+# %% Time constant distributions
 fig_directory_time = os.path.join(fig_directory, "TimeConstantDistributions")
 if not os.path.isdir(fig_directory_time):
     os.mkdir(fig_directory_time)
@@ -317,7 +304,6 @@ for data in data_dict:
                 hmc.plot_distribution(ax=axes, tau_plot=tau, color=color_dict["blue"], label='HMC mean', ci_label='HMC 95% CI')
                 mAP.plot_distribution(ax=axes, tau_plot=tau, color=color_dict["red"], label='MAP')
 
-                funcs.set_equal_tickspace(axes, figure=fig)
                 axes.legend(
                     fontsize=12,
                     frameon=True,
@@ -326,10 +312,12 @@ for data in data_dict:
                     edgecolor="black",
                 )
                 axes.set_axisbelow("line")
+                plt.figure(fig)
+                plt.xticks()
+                print(axes.get_xticks())
                 plt.suptitle(f"{data} - {dist}{pruning[i]}")
-                plt.gca().set_aspect("equal")
                 print(f"{data} - {dist}{pruning[i]}")
-                #plt.tight_layout()
+                plt.tight_layout()
                 plt.savefig(
                     os.path.join(
                         fig_directory_time,
@@ -339,269 +327,82 @@ for data in data_dict:
                 plt.show()
                 plt.close()
 
-# %% Time Constant Distributions
-for i, dist in enumerate(dFs):
-    #tau_drt = drt_map_list[i].distributions['DRT']['tau']
-    tau_drt = None
-    fig, axes = plt.subplots()
-    drt_hmc_list[i].plot_distribution(ax=axes, tau_plot=tau_drt, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    drt_map_list[i].plot_distribution(ax=axes, tau_plot=tau_drt, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
-    axes.legend()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT.png"))
-    plt.close()
-
-    #tau_ddt = ddt_map_list[i].distributions['TP-DDT']['tau']
-    tau_ddt = None
-    fig, axes = plt.subplots()
-    ddt_hmc_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    ddt_map_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
-    axes.legend()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT.png"))
-    plt.close()
-
-    #tau_multi = inv_multi_map_list[i].distributions['DRT']['tau']
-    tau_multi = None
-    fig, axes = plt.subplots()
-    inv_multi_hmc_list[i].plot_distribution(ax=axes, tau_plot=tau_multi, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    inv_multi_map_list[i].plot_distribution(ax=axes, tau_plot=tau_multi, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
-    axes.legend()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT.png"))
-    plt.close()
-
-    #tau_drt_mask = drt_map_masked_list[i].distributions['DRT']['tau']
-    tau_drt_mask = None
-    fig, axes = plt.subplots()
-    drt_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_drt_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    drt_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_drt_mask, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
-    axes.legend()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_masked.png"))
-    plt.close()
-
-    #tau_ddt_mask = ddt_map_masked_list[i].distributions['TP-DDT']['tau']
-    tau_ddt_mask = None
-    fig, axes = plt.subplots()
-    ddt_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    ddt_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_ddt_mask, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
-    axes.legend()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_masked.png"))
-    plt.close()
-
-    #tau_multi_mask = inv_multi_map_masked_list[i].distributions['DRT']['tau']
-    tau_multi_mask = None
-    fig, axes = plt.subplots()
-    inv_multi_hmc_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_multi_mask, color='k', label='HMC mean', ci_label='HMC 95% CI')
-    inv_multi_map_masked_list[i].plot_distribution(ax=axes, tau_plot=tau_multi_mask, color='r', label='MAP')
-    sec_xaxis = [x for x in axes.get_children() if isinstance(x, matplotlib.axes._secondary_axes.SecondaryAxis)][0]
-    sec_xaxis.set_xlabel('$f$ / Hz')
-    axes.legend()
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_masked.png"))
-    plt.close()
-
-    plt.show()
-
-# %% Visualize the recovered error structure
-# plot residuals and estimated error structure
-for i, dist in enumerate(dFs):
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    drt_hmc_list[i].plot_residuals(axes=axes)
-    # fig.suptitle("Bayes Estimated Error Structure")
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    drt_hmc_masked_list[i].plot_residuals(axes=axes)
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_HMC_Residuals_masked.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    ddt_hmc_list[i].plot_residuals(axes=axes)
-    # fig.suptitle("Bayes Estimated Error Structure")
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    ddt_hmc_masked_list[i].plot_residuals(axes=axes)
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_HMC_Residuals_masked.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    inv_multi_hmc_list[i].plot_residuals(axes=axes)
-    # fig.suptitle("Bayes Estimated Error Structure")
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    inv_multi_hmc_masked_list[i].plot_residuals(axes=axes)
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_HMC_Residuals_masked.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    drt_map_list[i].plot_residuals(axes=axes)
-    # fig.suptitle("Bayes Estimated Error Structure")
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    drt_map_masked_list[i].plot_residuals(axes=axes)
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_Residuals_masked.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    ddt_map_list[i].plot_residuals(axes=axes)
-    # fig.suptitle("Bayes Estimated Error Structure")
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    ddt_map_masked_list[i].plot_residuals(axes=axes)
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_Residuals_masked.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    inv_multi_map_list[i].plot_residuals(axes=axes)
-    # fig.suptitle("Bayes Estimated Error Structure")
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharex=True)
-    inv_multi_map_masked_list[i].plot_residuals(axes=axes)
-    plt.figure(fig)
-plt.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_Residuals_masked.png"))
-    plt.close()
-# plot true error structure in miliohms. Cant with this data
-# p = axes[0].plot(freq, 3*Zdf['sigma_re'] * 1000, ls='--')
-# axes[0].plot(freq, -3*Zdf['sigma_re'] * 1000, ls='--', c=p[0].get_color())
-# axes[1].plot(freq, 3*Zdf['sigma_im'] * 1000, ls='--')
-# axes[1].plot(freq, -3*Zdf['sigma_im'] * 1000, ls='--', c=p[0].get_color(), label='True $\pm 3\sigma$')
+# %% Peak fitting
+# Only fit peaks that have a prominence of >= 10% of the estimated polarization resistance
+fig, axes = plt.subplots(2, 1, figsize=(8, 9))
+mAP = copy.deepcopy(data_dict['v=1cms']['dmt']['map'])  # map
+mAP.fit_peaks(prom_rthresh=0.10)
+mAP.plot_peak_fit(ax=axes[0])
+mAP.plot_peak_fit(ax=axes[1], plot_individual_peaks=True)
+fig.tight_layout()
+plt.show()
 
 # %% Peak fitting
-# Only fit peaks that have a prominence of >= 5% of the estimated polarization resistance
-for i, dist in enumerate(dFs):
+fig_directory_peak = os.path.join(fig_directory, "PeakFits")
+if not os.path.isdir(fig_directory_time):
+    os.mkdir(fig_directory_time)
+unit_scale = ""
+pruning = ["", " - masked"]
+area = None
+color_dict = mpl_settings.bright_dict
+no_fill_markers = mpl_settings.no_fill_markers
 
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
-    drt_map_list[i].fit_peaks(prom_rthresh=0.05)
-    drt_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    drt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-    plt.figure(fig)
-plt.tight_layout()
-    fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits.png"))
-    plt.close()
+for data in data_dict:
+    for dist in data_dict[data]:
+        for i in range(2):
+            idx = i * 2
+            hmc = copy.deepcopy(data_dict[data][dist][fit_keys[idx]])  # hmc
+            mAP = copy.deepcopy(data_dict[data][dist][fit_keys[idx + 1]])  # map
+            with contextlib.redirect_stdout(
+                funcs.FilteredStream(filtered_values=["f"])
+            ):
+                fig, axes = plt.subplots(2, 1, figsize=(8, 9))
+                hmc.fit_peaks(prom_rthresh=0.10)
+                hmc.plot_peak_fit(ax=axes[0])
+                hmc.plot_peak_fit(ax=axes[1], plot_individual_peaks=True)
+                axes.legend(
+                    fontsize=12,
+                    frameon=True,
+                    framealpha=1,
+                    fancybox=False,
+                    edgecolor="black",
+                )
+                plt.figure(fig)
+                plt.suptitle(f"{data} - {dist} - {fit_keys[idx]}{pruning[i]}")
+                plt.tight_layout()
+                plt.savefig(
+                    os.path.join(
+                        fig_directory_time,
+                        f"{data} - {dist}{pruning[i]}-PeakFits.png",
+                    )
+                )
+                plt.show()
+                plt.close()
 
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
-    ddt_map_list[i].fit_peaks(prom_rthresh=0.05)
-    ddt_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    ddt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-    plt.figure(fig)
-plt.tight_layout()
-    fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits.png"))
-    plt.close()
+                fig, axes = plt.subplots(2, 1, figsize=(8, 9))
+                mAP.fit_peaks(prom_rthresh=0.10)
+                mAP.plot_peak_fit(ax=axes[0])
+                mAP.plot_peak_fit(ax=axes[1], plot_individual_peaks=True)
+                axes.legend(
+                    fontsize=12,
+                    frameon=True,
+                    framealpha=1,
+                    fancybox=False,
+                    edgecolor="black",
+                )
+                plt.figure(fig)
+                plt.suptitle(f"{data} - {dist}{pruning[i]}")
+                plt.tight_layout()
+                plt.savefig(
+                    os.path.join(
+                        fig_directory_time,
+                        f"{data} - {dist}{pruning[i]}-PeakFits.png",
+                    )
+                )
+                plt.show()
+                plt.close()
+                hmc.plot_distribution(ax=axes, tau_plot=tau, color=color_dict["blue"], label='HMC mean', ci_label='HMC 95% CI')
+                mAP.plot_distribution(ax=axes, tau_plot=tau, color=color_dict["red"], label='MAP')
 
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
-    inv_multi_map_list[i].fit_peaks(prom_rthresh=0.05)
-    inv_multi_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    inv_multi_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-    plt.figure(fig)
-plt.tight_layout()
-    fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
-    try:
-        drt_map_masked_list[i].fit_peaks(prom_rthresh=0.05)
-        drt_map_masked_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-        drt_map_masked_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-        axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-        plt.figure(fig)
-plt.tight_layout()
-        fig.tight_layout()
-        plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits_masked.png"))
-        plt.close()
-    except:
-        print("Error with file " + str(chosen[i]) + "For DRT Non-zero Peak Fitting")
-
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
-    ddt_map_list[i].fit_peaks(prom_rthresh=0.05)
-    ddt_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    ddt_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-    plt.figure(fig)
-plt.tight_layout()
-    fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DDT_MAP_PeakFits_masked.png"))
-    plt.close()
-
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
-    inv_multi_map_list[i].fit_peaks(prom_rthresh=0.05)
-    inv_multi_map_list[i].plot_peak_fit(ax=axes[0])  # Plot the overall peak fit
-    inv_multi_map_list[i].plot_peak_fit(ax=axes[1], plot_individual_peaks=True)  # Plot the individual peaks
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-    plt.figure(fig)
-plt.tight_layout()
-    fig.tight_layout()
-    plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT-DDT_MAP_PeakFits_masked.png"))
-    plt.close()
-
-#%% Re sort files
-
-figures = glob.glob(os.path.join(fig_directory, '*'))
-
-for iden in ident:
-    if not os.path.isdir(os.path.join(fig_directory, str(iden))):
-        os.makedirs(os.path.join(fig_directory, str(iden)))
-
-for file in figures:
-    name = os.path.basename(file)
-    if '25mHz-20ppd' in name:
-        shutil.move(file, os.path.join(fig_directory, '25mHz-20ppd'))
-"""
+#plt.savefig(os.path.join(fig_directory, str(ident[i]) + "_DRT_MAP_PeakFits.png"))
+# TODO: Peak fit loop, Lin KK, review bayes_drt tutorials again to make better fits
