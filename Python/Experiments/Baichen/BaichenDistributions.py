@@ -268,13 +268,13 @@ for data in data_dict:
                     edgecolor="black",
                 )
                 axes.set_axisbelow("line")
-                plt.suptitle(f"{data} - {dist}{pruning[i]}")
+                plt.suptitle(f"{data}-{dist}{pruning[i]}")
                 plt.gca().set_aspect("equal")
                 plt.tight_layout()
                 plt.savefig(
                     os.path.join(
                         fig_directory_fit,
-                        f"{data} - {dist}{pruning[i]}-FitImpedance.png",
+                        f"{data}-{dist}{pruning[i]}-FitImpedance.png",
                     )
                 )
                 plt.show()
@@ -285,7 +285,7 @@ fig_directory_time = os.path.join(fig_directory, "TimeConstantDistributions")
 if not os.path.isdir(fig_directory_time):
     os.mkdir(fig_directory_time)
 unit_scale = ""
-pruning = ["", " - masked"]
+pruning = ["", "-masked"]
 area = None
 color_dict = mpl_settings.bright_dict
 no_fill_markers = mpl_settings.no_fill_markers
@@ -315,13 +315,13 @@ for data in data_dict:
                 plt.figure(fig)
                 plt.xticks()
                 print(axes.get_xticks())
-                plt.suptitle(f"{data} - {dist}{pruning[i]}")
-                print(f"{data} - {dist}{pruning[i]}")
+                plt.suptitle(f"{data}-{dist}{pruning[i]}")
+                print(f"{data}-{dist}{pruning[i]}")
                 plt.tight_layout()
                 plt.savefig(
                     os.path.join(
                         fig_directory_time,
-                        f"{data} - {dist}{pruning[i]}-TimeConstantDistributions.png",
+                        f"{data}-{dist}{pruning[i]}-TimeConstantDistributions.png",
                     )
                 )
                 plt.show()
@@ -342,7 +342,7 @@ fig_directory_peak = os.path.join(fig_directory, "PeakFits")
 if not os.path.isdir(fig_directory_time):
     os.mkdir(fig_directory_time)
 unit_scale = ""
-pruning = ["", " - masked"]
+pruning = ["", "-masked"]
 area = None
 color_dict = mpl_settings.bright_dict
 no_fill_markers = mpl_settings.no_fill_markers
@@ -360,7 +360,7 @@ for data in data_dict:
                 hmc.fit_peaks(prom_rthresh=0.10)
                 hmc.plot_peak_fit(ax=axes[0])
                 hmc.plot_peak_fit(ax=axes[1], plot_individual_peaks=True)
-                axes.legend(
+                axes[1].legend(
                     fontsize=12,
                     frameon=True,
                     framealpha=1,
@@ -368,12 +368,12 @@ for data in data_dict:
                     edgecolor="black",
                 )
                 plt.figure(fig)
-                plt.suptitle(f"{data} - {dist} - {fit_keys[idx]}{pruning[i]}")
+                plt.suptitle(f"{data}-{dist}-{fit_keys[idx]}{pruning[i]}")
                 plt.tight_layout()
                 plt.savefig(
                     os.path.join(
                         fig_directory_time,
-                        f"{data} - {dist}{pruning[i]}-PeakFits.png",
+                        f"{data}-{dist}{pruning[i]}-PeakFits.png",
                     )
                 )
                 plt.show()
@@ -391,12 +391,12 @@ for data in data_dict:
                     edgecolor="black",
                 )
                 plt.figure(fig)
-                plt.suptitle(f"{data} - {dist}{pruning[i]}")
+                plt.suptitle(f"{data}-{dist}{pruning[i]}")
                 plt.tight_layout()
                 plt.savefig(
                     os.path.join(
                         fig_directory_time,
-                        f"{data} - {dist}{pruning[i]}-PeakFits.png",
+                        f"{data}-{dist}{pruning[i]}-PeakFits.png",
                     )
                 )
                 plt.show()

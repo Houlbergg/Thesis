@@ -145,7 +145,7 @@
           <Trace Num="128" FastDisplay="false" UnderSampling="false" LineColor="255" DrawLines="false" LineStyle="0" LineSize="1" DrawPoints="true" PointsStyle="5" PointsSize="2" PointsTransparency="0" HollowPoints="false" PointsColor="32768"/>
         </TracesStyle>
         <TracesParams>
-          <Trace Num="1" FileName="" Title="" X-unit="37" Y-unit="38" Y2Axis="false" frequency="0" HLightSel="2" HLightNum="1"/>
+          <Trace Num="1" FileName="" Title="" X-unit="37" Y-unit="38" Y2Axis="false" frequency="0" HLightSel="2" HLightNum="5"/>
           <Trace Num="2" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
           <Trace Num="3" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
           <Trace Num="4" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
