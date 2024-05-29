@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
-	<Configuration Num="1" Version="1">
-		<Info Soft="EC-Lab" Version="1150" YYYY="2023" MM="5" DD="4" Demo="true" Beta="false"/>  <Windows Num="1">
-      <WindowsProp Name="" Left="10" Top="1" Height="0" Width="400" WState="0"/>
+  <Configuration Num="1" Version="1">
+    <Info Soft="EC-Lab" Version="1150" YYYY="2023" MM="5" DD="4" Demo="true" Beta="false"/>
+    <Windows Num="1">
+      <WindowsProp Name="" Left="10" Top="2" Height="0" Width="400" WState="0"/>
       <Graph Num="1">
         <GraphStyle HideOCVpts="false" XY1prop="true" GraphReprName="Markers style" GraphReprPredefined="true" BackColor="16777215" Left3DColor="16777215" Bottom3DColor="16777215" AxesFontName="Arial" AxesFontSize="8" ShowOrigin="true" OriginColor="33023" OriginStyle="0" OriginSize="1"/>
         <TitleStyle Text="" Color="0" Dock="true" Visible="false" FontName="Arial" FontSize="12" FontStyle="1" PositionX="0" PositionY="0"/>
@@ -145,7 +146,7 @@
           <Trace Num="128" FastDisplay="false" UnderSampling="false" LineColor="255" DrawLines="false" LineStyle="0" LineSize="1" DrawPoints="true" PointsStyle="5" PointsSize="2" PointsTransparency="0" HollowPoints="false" PointsColor="32768"/>
         </TracesStyle>
         <TracesParams>
-          <Trace Num="1" FileName="" Title="" X-unit="37" Y-unit="38" Y2Axis="false" frequency="0" HLightSel="2" HLightNum="3"/>
+          <Trace Num="1" FileName="" Title="" X-unit="37" Y-unit="38" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="3"/>
           <Trace Num="2" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
           <Trace Num="3" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
           <Trace Num="4" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>

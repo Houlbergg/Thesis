@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
-	<Configuration Num="1" Version="1">
-		<Info Soft="EC-Lab" Version="1150" YYYY="2023" MM="5" DD="4" Demo="true" Beta="false"/>  <Windows Num="1">
-      <WindowsProp Name="" Left="10" Top="1" Height="0" Width="400" WState="0"/>
+  <Configuration Num="1" Version="1">
+    <Info Soft="EC-Lab" Version="1150" YYYY="2023" MM="5" DD="4" Demo="true" Beta="false"/>
+    <Windows Num="1">
+      <WindowsProp Name="" Left="514" Top="135" Height="550" Width="756" WState="2"/>
       <Graph Num="1">
         <GraphStyle HideOCVpts="false" XY1prop="true" GraphReprName="Markers style" GraphReprPredefined="true" BackColor="16777215" Left3DColor="16777215" Bottom3DColor="16777215" AxesFontName="Arial" AxesFontSize="8" ShowOrigin="true" OriginColor="33023" OriginStyle="0" OriginSize="1"/>
         <TitleStyle Text="" Color="0" Dock="true" Visible="false" FontName="Arial" FontSize="12" FontStyle="1" PositionX="0" PositionY="0"/>
-        <LegendStyle Visible="true" Transparency="0" Dock="true" DockPosition="2" PositionX="71" PositionY="71" BackColor="16777215" FontName="Arial" FontSize="8" FontStyle="0"/>
+        <LegendStyle Visible="true" Transparency="0" Dock="true" DockPosition="2" PositionX="904" PositionY="904" BackColor="16777215" FontName="Arial" FontSize="8" FontStyle="0"/>
         <GraphUnits Use_unit_time="false" Unit_time="3" Use_unit_E="false" Unit_E="0" Use_unit_I="false" Unit_I="1" Unit_I_div="0" Use_unit_Q="false" Unit_Q="1" Unit_Q_div="0" Use_unit_freq="false" Unit_freq="2" Use_unit_R="false" Unit_R="2" Unit_R_div="0" Use_unit_W="false" Unit_W="0" Unit_W_div="0" Use_unit_energy="false" Unit_energy="1" Unit_energy_div="0" CvtPotToRef2="false" Ref2Indx="0" Use_unit_capacity="false" Unit_capacity="2" Unit_capacity_div="0" Use_unit_Admittance="false" Unit_Admittance="2" Use_unit_Resistivity="false" Unit_Resistivity="2" Unit_Resistivity_div="0" Use_unit_Conductivity="false" Unit_Conductivity="2" Unit_Conductivity_div="0"/>
         <AxesStyle>
-          <AxisStyle Axis="x-axis" Name="" ShortName="" DrawGrid="true" AxisEnabled="true" GridColor="12632256" GridStyle="0" Title="Re(Z)/Ohm" StartPos="0" EndPos="100" AutoScale="true" TitleAuto="true" Color="0" ScientNotation="false" Min="0.0803393322215403" Max="0.167460347415415" Inverted="false" ProcessID="0" ProcessExpr="" AutoScroll="false"/>
-          <AxisStyle Axis="y1-axis" Name="" ShortName="" DrawGrid="true" AxisEnabled="true" GridColor="12632256" GridStyle="0" Title="-Im(Z)/Ohm" StartPos="0" EndPos="100" AutoScale="true" TitleAuto="true" Color="16711680" ScientNotation="false" Min="-0.0200837381184101" Max="0.0172466911375523" Inverted="false" ProcessID="0" ProcessExpr="" AutoScroll="false"/>
+          <AxisStyle Axis="x-axis" Name="" ShortName="" DrawGrid="true" AxisEnabled="true" GridColor="12632256" GridStyle="0" Title="Re(Z)/Ohm" StartPos="0" EndPos="100" AutoScale="false" TitleAuto="true" Color="0" ScientNotation="false" Min="0.0593549293938201" Max="0.250141667061754" Inverted="false" ProcessID="0" ProcessExpr="" AutoScroll="false"/>
+          <AxisStyle Axis="y1-axis" Name="" ShortName="" DrawGrid="true" AxisEnabled="true" GridColor="12632256" GridStyle="0" Title="-Im(Z)/Ohm" StartPos="0" EndPos="100" AutoScale="false" TitleAuto="true" Color="16711680" ScientNotation="false" Min="-0.0357712239531837" Max="0.0459788658229671" Inverted="false" ProcessID="0" ProcessExpr="" AutoScroll="false"/>
           <AxisStyle Axis="y2-axis" Name="" ShortName="" DrawGrid="false" AxisEnabled="false" GridColor="12632256" GridStyle="0" Title="Y2-axis" StartPos="0" EndPos="100" AutoScale="false" TitleAuto="true" Color="0" ScientNotation="false" Min="1" Max="10" Inverted="false" ProcessID="0" ProcessExpr="" AutoScroll="false"/>
           <AxisStyle Axis="z-axis" Name="" ShortName="" DrawGrid="true" AxisEnabled="false" GridColor="12632256" GridStyle="0" Title="" StartPos="0" EndPos="100" AutoScale="false" TitleAuto="true" Color="0" ScientNotation="false" Min="0" Max="0" Inverted="false" ProcessID="0" ProcessExpr="" AutoScroll="false"/>
         </AxesStyle>
@@ -145,7 +146,7 @@
           <Trace Num="128" FastDisplay="false" UnderSampling="false" LineColor="255" DrawLines="false" LineStyle="0" LineSize="1" DrawPoints="true" PointsStyle="5" PointsSize="2" PointsTransparency="0" HollowPoints="false" PointsColor="32768"/>
         </TracesStyle>
         <TracesParams>
-          <Trace Num="1" FileName="" Title="" X-unit="37" Y-unit="38" Y2Axis="false" frequency="0" HLightSel="2" HLightNum="3"/>
+          <Trace Num="1" FileName="" Title="" X-unit="37" Y-unit="38" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
           <Trace Num="2" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
           <Trace Num="3" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
           <Trace Num="4" FileName="" Title="" X-unit="0" Y-unit="0" Y2Axis="false" frequency="0" HLightSel="0" HLightNum="0"/>
