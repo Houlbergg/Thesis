@@ -21,8 +21,8 @@ from bayes_drt2 import utils
 import funcs
 import statics
 
-plt.rcParams['xtick.labelsize'] = 14
-plt.rcParams['ytick.labelsize'] = 14
+plt.rcParams["xtick.labelsize"] = 14
+plt.rcParams["ytick.labelsize"] = 14
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -30,7 +30,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 directory, fig_directory, pkl_directory = statics.set_experiment(
     "IRFB\\240415-Felt-0p5M_FeCl2FeCl23-1M_HCl"
 )
-files = glob.glob("Data/*.mpt")
+files = glob.glob("240503-Felt-1p5M_FeCl2FeCl3-1M_HCl/Data/*.mpt")
 
 # %% Parsing with pyimpspec. REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
 parses = []
@@ -46,7 +46,7 @@ for file in files:
             print("Pyimpspec could not parse file" + str(file))
     else:
         pyi_pickle = utils.load_pickle(string)
-        #pyi_pickle = pyi.DataSet.from_dict(pyi_pickle)
+        # pyi_pickle = pyi.DataSet.from_dict(pyi_pickle)
         parses.append(pyi_pickle)
 
 # %%
@@ -111,7 +111,7 @@ for i, exp in enumerate(chosen_masked):
     # ax = set_aspect_ratio(ax, chosen[0])
     # ax.set_xlim((0.4, 1))
     # ax.set_ylim((0, 0.25))
-    funcs.set_equal_tickspace(ax, figure=fig, space='max')
+    funcs.set_equal_tickspace(ax, figure=fig, space="max")
 
     ax.set_aspect("equal")
     ax.grid(visible=True)
@@ -141,7 +141,7 @@ for i, exp in enumerate(freq_list):
     # ax = set_aspect_ratio(ax, chosen[0])
     # ax.set_xlim((0.4, 0.9))
     # ax.set_ylim((0, 0.25))
-    funcs.set_equal_tickspace(ax, figure=fig, space=('min', 1.5))
+    funcs.set_equal_tickspace(ax, figure=fig, space=("min", 1.5))
 
     ax.grid(visible=True)
     ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")

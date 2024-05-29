@@ -437,7 +437,7 @@ plt.rcParams["legend.framealpha"] = 0.95
 
 # %% Load Files and seperate by type.
 # REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
-files = glob.glob("Data/*.mpt")
+files = glob.glob("240503-Felt-1p5M_FeCl2FeCl3-1M_HCl/Data/*.mpt")
 
 # %% Parsing with pyimpspec
 dummy_freq = np.logspace(6, -2, 81)

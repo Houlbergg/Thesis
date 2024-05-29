@@ -20,14 +20,14 @@ import statics
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-plt.rcParams['xtick.labelsize'] = 14
-plt.rcParams['ytick.labelsize'] = 14
+plt.rcParams["xtick.labelsize"] = 14
+plt.rcParams["ytick.labelsize"] = 14
 
 # %% Set folders
-directory, fig_directory, pkl_directory = statics.set_experiment('IRFB/FirstCell')
+directory, fig_directory, pkl_directory = statics.set_experiment("IRFB/FirstCell")
 # %% Load Files and seperate by type.
 # REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
-files = glob.glob('Data/*.mpt')
+files = glob.glob("240503-Felt-1p5M_FeCl2FeCl3-1M_HCl/Data/*.mpt")
 
 # %% Parsing with pyimpspec. REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
 parses = []
@@ -68,12 +68,12 @@ chosen_parsed = [parses[7][0], parses[8][0]]
 first = chosen_parsed[0].get_impedances().real
 second = chosen_parsed[1].get_impedances().real
 chosen_diff = second[119] - first[119]
-ident = ['Base', 'Dampened']
+ident = ["Base", "Dampened"]
 
 # %% Raw Nyquist
 
-unit_scale = ''
-area = 2.3 ** 2
+unit_scale = ""
+area = 2.3**2
 fig, ax = plt.subplots()
 for i, exp in enumerate(chosen_parsed):
     imp = exp.get_impedances() * area
@@ -82,22 +82,24 @@ for i, exp in enumerate(chosen_parsed):
     funcs.set_equal_tickspace(ax, figure=fig)
 
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    ax.set_ylabel(
+        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+    )
     ax.legend()
-    ax.set_axisbelow('line')
-    plt.gca().set_aspect('equal')
-#remove_legend_duplicate()
-#plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+    ax.set_axisbelow("line")
+    plt.gca().set_aspect("equal")
+# remove_legend_duplicate()
+# plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
 plt.tight_layout()
-plt.savefig(os.path.join(fig_directory, 'Dampening' + "_Nyquist_data_area.png"))
+plt.savefig(os.path.join(fig_directory, "Dampening" + "_Nyquist_data_area.png"))
 plt.show()
 plt.close()
 
 # %% Raw Nyquist zoom
 
-unit_scale = ''
-area = 2.3 ** 2
+unit_scale = ""
+area = 2.3**2
 fig, ax = plt.subplots()
 for i, exp in enumerate(chosen_parsed):
     imp = exp.get_impedances() * area
@@ -108,23 +110,25 @@ for i, exp in enumerate(chosen_parsed):
     funcs.set_equal_tickspace(ax, figure=fig)
 
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    ax.set_ylabel(
+        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+    )
     ax.legend()
-    ax.set_axisbelow('line')
+    ax.set_axisbelow("line")
     plt.tight_layout()
-    plt.gca().set_aspect('equal')
-#remove_legend_duplicate()
-#plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+    plt.gca().set_aspect("equal")
+# remove_legend_duplicate()
+# plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
 plt.tight_layout()
-plt.savefig(os.path.join(fig_directory, 'Dampening_zoom' + "_Nyquist_data_area.png"))
+plt.savefig(os.path.join(fig_directory, "Dampening_zoom" + "_Nyquist_data_area.png"))
 plt.show()
 plt.close()
 
 # %% Raw Nyquist shifted
 
-unit_scale = ''
-area = 2.3 ** 2
+unit_scale = ""
+area = 2.3**2
 fig, ax = plt.subplots()
 for i, exp in enumerate(chosen_parsed):
     imp = exp.get_impedances() * area
@@ -133,41 +137,49 @@ for i, exp in enumerate(chosen_parsed):
     funcs.set_equal_tickspace(ax, figure=fig)
 
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    ax.set_ylabel(
+        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+    )
     ax.legend()
-    ax.set_axisbelow('line')
+    ax.set_axisbelow("line")
     plt.tight_layout()
-    plt.gca().set_aspect('equal')
-#remove_legend_duplicate()
-#plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
-plt.savefig(os.path.join(fig_directory, 'Dampening_shifted' + "_Nyquist_data_area.png"))
+    plt.gca().set_aspect("equal")
+# remove_legend_duplicate()
+# plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.savefig(os.path.join(fig_directory, "Dampening_shifted" + "_Nyquist_data_area.png"))
 plt.show()
 plt.close()
 
 # %% Raw Nyquist shifted zoom
 
-unit_scale = ''
-area = 2.3 ** 2
+unit_scale = ""
+area = 2.3**2
 fig, ax = plt.subplots()
 for i, exp in enumerate(chosen_parsed):
     imp = exp.get_impedances() * area
-    ax.plot(imp.real - i * chosen_diff * area, -imp.imag, label=ident[i],markersize=3.5)
+    ax.plot(
+        imp.real - i * chosen_diff * area, -imp.imag, label=ident[i], markersize=3.5
+    )
     # ax = set_aspect_ratio(ax, chosen[0])
     ax.set_xlim((1.8, 2.2))
     ax.set_ylim((0, 0.3))
     funcs.set_equal_tickspace(ax, figure=fig)
 
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    ax.set_ylabel(
+        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+    )
     ax.legend()
-    ax.set_axisbelow('line')
+    ax.set_axisbelow("line")
     plt.tight_layout()
-    plt.gca().set_aspect('equal')
-#remove_legend_duplicate()
-#plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
-plt.savefig(os.path.join(fig_directory, 'Dampening_shifted_zoom' + "_Nyquist_data_area.png"))
+    plt.gca().set_aspect("equal")
+# remove_legend_duplicate()
+# plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.savefig(
+    os.path.join(fig_directory, "Dampening_shifted_zoom" + "_Nyquist_data_area.png")
+)
 plt.show()
 plt.close()
 
@@ -178,11 +190,11 @@ chosen_dummy = parses[7:11]
 chosen_dummy2 = chosen_dummy[:]
 chosen_parsed = [sublist[0] for sublist in parses[7:11]]
 
-tailident = ['20mL/min', '20mL/min Dampened', '30mL/min Dampened', '40mL/min Dampened']
-ident = ['Base', 'Dampened']
+tailident = ["20mL/min", "20mL/min Dampened", "30mL/min Dampened", "40mL/min Dampened"]
+ident = ["Base", "Dampened"]
 
-unit_scale = ''
-area = 2.3 ** 2
+unit_scale = ""
+area = 2.3**2
 fig, ax = plt.subplots()
 for i, exp in enumerate(chosen_parsed):
     imp = exp.get_impedances() * area
@@ -191,14 +203,18 @@ for i, exp in enumerate(chosen_parsed):
     funcs.set_equal_tickspace(ax, figure=fig)
 
     ax.grid(visible=True)
-    ax.set_xlabel(f'$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
-    ax.set_ylabel(f'$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$')
+    ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
+    ax.set_ylabel(
+        f"$-Z^{{\prime\prime}} \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$"
+    )
     ax.legend()
-    ax.set_axisbelow('line')
+    ax.set_axisbelow("line")
     plt.tight_layout()
-    plt.gca().set_aspect('equal')
-#remove_legend_duplicate()
-#plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
-plt.savefig(os.path.join(fig_directory, 'Dampening_WeirdTail' + "_Nyquist_data_area.png"))
+    plt.gca().set_aspect("equal")
+# remove_legend_duplicate()
+# plt.legend(loc='best', bbox_to_anchor=(0., 0.5, 0.5, 0.5))
+plt.savefig(
+    os.path.join(fig_directory, "Dampening_WeirdTail" + "_Nyquist_data_area.png")
+)
 plt.show()
 plt.close()

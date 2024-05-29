@@ -21,8 +21,8 @@ from bayes_drt2 import utils
 import funcs
 import statics
 
-plt.rcParams['xtick.labelsize'] = 14
-plt.rcParams['ytick.labelsize'] = 14
+plt.rcParams["xtick.labelsize"] = 14
+plt.rcParams["ytick.labelsize"] = 14
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -30,17 +30,17 @@ pd.options.mode.chained_assignment = None  # default='warn'
 directory, fig_directory, pkl_directory = statics.set_experiment(
     "IRFB\\240415-Felt-0p5M_FeCl2FeCl23-1M_HCl"
 )
-files = glob.glob("Data/*.mpt")
+files = glob.glob("240503-Felt-1p5M_FeCl2FeCl3-1M_HCl/Data/*.mpt")
 
 directory1, fig_directory1, pkl_directory1 = statics.set_experiment(
     "IRFB\\240415-Felt-0p5M_FeCl2FeCl23-1M_HCl"
 )
-files = glob.glob("Data/*.mpt")
+files = glob.glob("240503-Felt-1p5M_FeCl2FeCl3-1M_HCl/Data/*.mpt")
 
 directory2, fig_directory2, pkl_directory2 = statics.set_experiment(
     "IRFB\\240415-Felt-0p5M_FeCl2FeCl23-1M_HCl"
 )
-files = glob.glob("Data/*.mpt")
+files = glob.glob("240503-Felt-1p5M_FeCl2FeCl3-1M_HCl/Data/*.mpt")
 
 # Reconsider this one
 
@@ -58,7 +58,7 @@ for file in files:
             print("Pyimpspec could not parse file" + str(file))
     else:
         pyi_pickle = utils.load_pickle(string)
-        #pyi_pickle = pyi.DataSet.from_dict(pyi_pickle)
+        # pyi_pickle = pyi.DataSet.from_dict(pyi_pickle)
         parses.append(pyi_pickle)
 
 # %%
@@ -70,7 +70,7 @@ for peis in parses:
     if not os.path.isfile(string_mask):
         eis_masked, mask = funcs.create_mask_notail(eis)
         parse_masked.append(eis_masked)
-        #utils.save_pickle(parse_masked, string_mask)
+        # utils.save_pickle(parse_masked, string_mask)
     else:
         pyi_pickle_masked = utils.load_pickle(string_mask)
         parse_masked.append(pyi_pickle_masked)
@@ -123,7 +123,7 @@ for i, exp in enumerate(chosen_masked):
     # ax = set_aspect_ratio(ax, chosen[0])
     # ax.set_xlim((0.4, 1))
     # ax.set_ylim((0, 0.25))
-    funcs.set_equal_tickspace(ax, figure=fig, space='max')
+    funcs.set_equal_tickspace(ax, figure=fig, space="max")
 
     ax.set_aspect("equal")
     ax.grid(visible=True)
@@ -153,7 +153,7 @@ for i, exp in enumerate(freq_list):
     # ax = set_aspect_ratio(ax, chosen[0])
     # ax.set_xlim((0.4, 0.9))
     # ax.set_ylim((0, 0.25))
-    funcs.set_equal_tickspace(ax, figure=fig, space=('min', 1.5))
+    funcs.set_equal_tickspace(ax, figure=fig, space=("min", 1.5))
 
     ax.grid(visible=True)
     ax.set_xlabel(f"$Z^\prime \ / \ \mathrm{{{unit_scale}}}\Omega \mathrm{{cm^2}}$")
