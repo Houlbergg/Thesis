@@ -11,6 +11,7 @@ from matplotlib.figure import Figure
 import pickle
 import io
 import warnings
+from scipy.signal import find_peaks
 
 
 # Define Custom Functions (And Class :) )
@@ -27,8 +28,12 @@ class FilteredStream(io.StringIO):
         pass  # Override flush method to prevent clearing the buffer
 
     def write_warning(self, message, category, filename, lineno, file=None, line=None):
-        if not any(filtered_value in message for filtered_value in self.filtered_values):
-            formatted_warning = warnings.formatwarning(message, category, filename, lineno, line)
+        if not any(
+            filtered_value in message for filtered_value in self.filtered_values
+        ):
+            formatted_warning = warnings.formatwarning(
+                message, category, filename, lineno, line
+            )
             self.write(formatted_warning)
 
 
@@ -389,6 +394,18 @@ def create_mask_notail(dataset):
             break
     for i in range(dataset.get_num_points()):
         mask[i] = i < tail_end
+    dataset_masked.set_mask(mask)
+    return dataset_masked, mask
+
+
+def create_mask_diffusion(dataset):
+    dataset_masked = pyi.DataSet.duplicate(dataset)
+    circle_split = 0
+    mask = {}
+    z_im = dataset.get_impedances().imag
+    peaks, _ = find_peaks(z_im)
+    for i in range(dataset.get_num_points()):
+        mask[i] = i < max(peaks)
     dataset_masked.set_mask(mask)
     return dataset_masked, mask
 
