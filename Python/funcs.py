@@ -410,6 +410,18 @@ def create_mask_diffusion(dataset):
     return dataset_masked, mask
 
 
+def create_mask_ct(dataset):
+    dataset_masked = pyi.DataSet.duplicate(dataset)
+    circle_split = 0
+    mask = {}
+    z_im = dataset.get_impedances().imag
+    peaks, _ = find_peaks(z_im)
+    for i in range(dataset.get_num_points()):
+        mask[i] = i > max(peaks)
+    dataset_masked.set_mask(mask)
+    return dataset_masked, mask
+
+
 def reset_files(path, extension):
     """
     Remove all files of given type in the given directory.

@@ -46,20 +46,20 @@ for file in files:
         parses.append(funcs.load_pickle(string))
 
 # %%
-parses_masked = []
+parses_ct = []
 for peis in parses:
     label = peis[0].get_label().split("C15")[0]
-    string_mask = os.path.join(parse_directory, label + "_masked.pkl")
-    if not os.path.isfile(string_mask):
-        parse_masked = []
+    string_ct = os.path.join(parse_directory, label + "_ct.pkl")
+    if not os.path.isfile(string_ct):
+        parse_ct = []
         for eis in peis:
-            eis_masked, mask = funcs.create_mask_notail(eis)
-            parse_masked.append(eis_masked)
-        funcs.save_pickle(parse_masked, string_mask)
-        parses_masked.append(parse_masked)
+            eis_ct, mask = funcs.create_mask_ct(eis)
+            parse_ct.append(eis_ct)
+        funcs.save_pickle(parse_ct, string_ct)
+        parses_ct.append(parse_ct)
     else:
-        pyi_pickle_masked = funcs.load_pickle(string_mask)
-        parses_masked.append(pyi_pickle_masked)
+        pyi_pickle_masked = funcs.load_pickle(string_ct)
+        parses_ct.append(pyi_pickle_masked)
 
 # %%
 parses_diffusion = []
@@ -83,8 +83,6 @@ chosen_names = files[-4:]
 # idx = list(map(lambda x: files.index(x), chosen_names)) Generalized form perhaps
 chosen_parses = parses[-4:]
 chosen_parses = [x[-1] for x in chosen_parses]
-chosen_masked = parses_masked[-4:]
-chosen_masked = [x[-1] for x in chosen_masked]
 chosen_diffusion = parses_diffusion[-4:]
 chosen_diffusion = [x[-1] for x in chosen_diffusion]
 
@@ -98,8 +96,6 @@ dFs_masked = []
 dFs_diffusion = []
 for eis in chosen_parses:
     dFs.append(eis.to_dataframe(columns=columns))
-for eis in chosen_masked:
-    dFs_masked.append(eis.to_dataframe(columns=columns))
 for eis in chosen_diffusion:
     dFs_diffusion.append(eis.to_dataframe(columns=columns))
 
@@ -157,7 +153,7 @@ pkl_direcs = [pkl_directory + "\\" + x for x in dist_list_str]
 # %% Fitting
 data_dict = {}
 dist_keys = ["drt", "ddt", "dmt"]
-fit_keys = ["hmc", "map", "hmc_masked", "map_masked"]
+fit_keys = ["hmc", "map", "hmc_diffusion", "map_diffusion"]
 with contextlib.redirect_stdout(
     funcs.FilteredStream(filtered_values=["f"])
 ), warnings.catch_warnings():
