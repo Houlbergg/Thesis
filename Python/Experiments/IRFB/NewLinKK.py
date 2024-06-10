@@ -24,8 +24,13 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 # %% Set folders
 directory, fig_directory, pkl_directory, parse_directory = statics.set_experiment(
-    "IRFB\\240515-Paper-1p5M_FeCl2FeCl3-1M_HCl"
+    # "IRFB\\240503-Felt-1p5M_FeCl2FeCl3-1M_HCl"
+    "IRFB\\240507-Cloth-1p5M_FeCl2FeCl3-1M_HCl"
+    # "IRFB\\240515-Paper-1p5M_FeCl2FeCl3-1M_HCl"
 )
+# exp = "1.5M Felt"
+exp = "1.5M Cloth"
+# exp = "1.5M Paper"
 files = glob.glob("Data/*.mpt")
 
 # %% Parsing with pyimpspec. REQUIRES exporting EC-Lab raw binaries (.mpr) as text (.mpt)
@@ -176,7 +181,7 @@ if plot_explorations is True:
 for i, tests in enumerate(explorations):
     fig, ax = pyi.mpl.plot_residuals(tests[0])
     plt.gca().invert_xaxis()
-    plt.suptitle(f"{ident[i]}")
+    # plt.suptitle(f"{ident[i]}")
     plt.tight_layout()
     plt.savefig(
         os.path.join(
@@ -190,7 +195,7 @@ for i, tests in enumerate(explorations):
 for i, tests in enumerate(explorations_masked):
     fig, ax = pyi.mpl.plot_residuals(tests[0])
     plt.gca().invert_xaxis()
-    plt.suptitle(f"{ident[i]}-masked")
+    # plt.suptitle(f"{ident[i]}-masked")
     plt.tight_layout()
     plt.savefig(
         os.path.join(
