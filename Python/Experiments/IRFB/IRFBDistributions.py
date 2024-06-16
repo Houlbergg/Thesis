@@ -31,7 +31,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 directory, fig_directory, pkl_directory, parse_directory = statics.set_experiment(
     "IRFB\\240415-Felt-0p5M_FeCl2FeCl23-1M_HCl"
 )
-files = glob.glob("Data/*.mpt")
+files = glob.glob("240503-Felt-1p5M_FeCl2FeCl3-1M_HCl/Data/*.mpt")
 
 # %% Parsing with pyimpspec. REQUIRES exporting EC-Lab raw binarys (.mpr) as text (.mpt)
 dummy_freq = np.logspace(6, -2, 81)

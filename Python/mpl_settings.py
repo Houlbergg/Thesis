@@ -48,6 +48,7 @@ markers = ["o", "s", "x", "v", "+", "D", "p", "*"]
 plt.rcParams["axes.prop_cycle"] = cycler(color=bright_colors, marker=markers)
 plt.rcParams["lines.markerfacecolor"] = "w"
 no_fill_markers = [mark.MarkerStyle(marker, fillstyle="none") for marker in markers]
+filled_markers = [mark.MarkerStyle(marker, fillstyle="full") for marker in markers]
 
 # plt.rcParams['axes.prop_cycle'] = cycler(color=bright_colors)
 # plt.rcParams['patch.facecolor'] = bright_colors[0]
@@ -82,4 +83,6 @@ plt.style.use("notebook")  # Overrides a lot
 plt.rcParams["xtick.labelsize"] = 12
 plt.rcParams["ytick.labelsize"] = 12
 
+plt.rcParams["figure.titlesize"] = 18
+plt.rcParams["figure.titleweight"] = "normal"
 # TODO - Rewrite as dicts per object to be passed directly to the plotting functions
