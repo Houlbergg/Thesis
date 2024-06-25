@@ -69,6 +69,7 @@ plt.rcParams["font.sans-serif"] = [
 plt.rcParams["mathtext.fontset"] = "dejavuserif"
 
 plt.rcParams["lines.markersize"] = 3
+plt.rcParams["lines.markeredgewidth"] = 1
 plt.rcParams["xtick.labelsize"] = tick_size
 plt.rcParams["ytick.labelsize"] = tick_size
 
